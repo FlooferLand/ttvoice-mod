@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "ttvoice",
+	"version": "1.0.0",
+	"name": "Text to Voice",
+	"description": "Type to speak!",
+	"authors": ["FlooferLand"],
+	"contact": {
+		"homepage": "https://flooferland.com/",
+		"sources": "https://github.com/FlooferLand/ttvoice"
+	},
+	"license": "MIT",
+	"icon": "assets/ttvoice/textures/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+            "com.flooferland.ttvoice.TextToVoiceClient"
+		],
+		"voicechat": [
+			"com.flooferland.ttvoice.VcPlugin"
+		],
+		"modmenu": [
+			"com.flooferland.ttvoice.ModMenuEntry"
+		]
+	},
+	"mixins": [
+		{
+			"config": "ttvoice.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*",
+		"voicechat": ">=1.20.1-2.5.0"
+	}
+}

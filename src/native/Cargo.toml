@@ -1,0 +1,21 @@
+[package]
+name = "native"
+authors = ["FlooferLand"]
+version = "0.1.0"
+edition = "2024"
+
+crate_type = ["cdylib"]
+
+[dependencies.windows]
+version = "0.61"
+features = [
+    "Media",
+    "Win32_System_Com",
+    "Win32_Media_Speech",
+    "Win32_Media_Streaming",
+    "Win32_Devices_DeviceAccess",
+    "Win32_Devices_DeviceQuery"
+]
+
+[dependencies]
+jni = "0.21"
