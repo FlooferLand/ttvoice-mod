@@ -1,8 +1,10 @@
 package com.flooferland.ttvoice.screen
 
+import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.screen.widgets.SpeechTextInputWidget
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
+import com.flooferland.ttvoice.util.math.Vector2Int
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -10,9 +12,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.*
 import net.minecraft.text.Style
 import net.minecraft.text.Text
-
-// TODO: Remaster the UI to give more space in the middle of the screen;
-//       Do this by moving the speech stuff to the bottom and opening up space, while making the history list toggleable
+import org.joml.Vector2i
 
 // TODO: Fix history being displayed / traveled through backwards
 
@@ -20,42 +20,67 @@ import net.minecraft.text.Text
 
 // TODO: Add an error label
 
-// TODO: Add a stop speaking button
-
 // TODO: Move history to entry list system, and make history elements clickable
 
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
     private lateinit var speakButton: ButtonWidget
+    private lateinit var historyToggleButton: ButtonWidget
     //private lateinit var historyWidget: HistoryWidget
     private lateinit var historyTextWidget: MultilineTextWidget
     var historyPointer = 0
 
     override fun init() {
+        val edgePad = Vector2i((width * 0.05).toInt(), (height * 0.05).toInt())
+
         // Adding the voice text input textbox
         run {
-            val size = Pair((width * 0.95).toInt(), (height * 0.1).toInt())
+            val size = Vector2Int((width * 0.95).toInt(), (height * 0.13).toInt())
             textBox = SpeechTextInputWidget(
                 this,
                 textRenderer,
-                (width * 0.5).toInt() - (size.first / 2),
-                (height * 0.25).toInt() - (size.second / 2),
-                size.first,
-                size.second,
+                edgePad.x,
+                (height - (size.y / 2)) - edgePad.y,
+                size.x - edgePad.x,
+                size.y - edgePad.y,
                 Text.of("Input text here"),
                 { speakActionTriggered(); }
             )
             this.addDrawableChild(textBox)
         }
 
-        // Speak button
+        // Button row
         run {
-            val size = Pair(100, 30)
-            speakButton = ButtonWidget.builder(Text.of("Speak")) { b -> speakActionTriggered() }
-                .position((width * 0.5).toInt() - (size.first / 2), (height * 0.4).toInt() - (size.second / 2))
-                .size(size.first, size.second)
-                .build()
-            this.addDrawableChild(speakButton)
+            val baseSize = Vector2Int(70, 30)
+            val basePosition = Vector2Int(0, (height * 0.83).toInt() - (baseSize.y / 2))
+            val widgets = ArrayList<ClickableWidget>()
+
+            // Speak button
+            run {
+                speakButton = ButtonWidget.builder(Text.of("Speak"))
+                    { b -> speakActionTriggered() }
+                    .size(baseSize.x, baseSize.y)
+                    .build()
+                widgets.add(speakButton)
+            }
+            // Toggle history button
+            run {
+                historyToggleButton = ButtonWidget.builder(Text.of("Toggle history"))
+                    { b -> toggleHistoryAction() }
+                    .size((baseSize.x * 1.3).toInt(), baseSize.y)
+                    .build()
+                widgets.add(historyToggleButton)
+            }
+
+            // Placement
+            var offset = edgePad.x + basePosition.x
+            for ((i, widget) in widgets.withIndex()) {
+                val pad = 10
+                widget.x = offset
+                widget.y = basePosition.y
+                offset += widget.width + pad
+                addDrawableChild(widget)
+            }
         }
 
         // History
@@ -68,25 +93,24 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             updateHistoryWidget()
         }
         /*run {
-            val size = Pair((width * 0.5).toInt(), 200)
+            val size = Vector2Int((width * 0.5).toInt(), 200)
             historyWidget = HistoryWidget(
                 this,
                 MinecraftClient.getInstance(),
-                size.first, size.second,
-                20, size.second - 30,
+                size.x, size.y,
+                20, size.y - 30,
                 50
             )
             this.addSelectableChild(historyWidget)
         }*/
 
         // Initialization thingies
-        SpeechUtil.stopSpeaking()
         setInitialFocus(textBox)
     }
 
     // Gets called when the history is updated
     fun updateHistoryWidget() {
-        val maxRows = 16
+        val maxRows = 15
 
         // Setting history text
         val text = Text.literal("")
@@ -105,20 +129,25 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // Setting history size stuff
         historyTextWidget.x = (width * 0.5).toInt() - (historyTextWidget.width / 2)
-        historyTextWidget.y = (height * 0.55).toInt()
+        historyTextWidget.y = (height * 0.1).toInt()
         historyTextWidget.setMaxRows(maxRows)
         historyTextWidget.setCentered(true)
     }
 
+    fun toggleHistoryAction() {
+        ModState.config.ui.viewHistory = !ModState.config.ui.viewHistory
+        historyTextWidget.visible = ModState.config.ui.viewHistory
+    }
+
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context);
-        run {
+        context!!.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)
+        if (historyTextWidget.visible) {
             val pad = 16
-            context!!.fill(
+            context.fill(
                 pad,
                 historyTextWidget.y - pad,
                 this.width - pad,
-                this.height - pad,
+                (height * 0.75).toInt() - pad,
                 0,
                 -1072689136
             )
@@ -128,8 +157,8 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     }
 
     fun speakActionTriggered() {
-        var text = textBox.text
-        if (text.isBlank()) {
+        var text = textBox.text.trim()
+        if (text.isEmpty()) {
             SatisfyingNoises.playDeny()
             return
         }
@@ -143,6 +172,9 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                     SpeechScreen.history.clear()
                     updateHistoryWidget()
                 }
+                RecognizedCommands.ToggleHistory.command -> {
+                    toggleHistoryAction()
+                }
                 else -> {
                     SatisfyingNoises.playDeny()
                     commandSucceeded = false
@@ -154,7 +186,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             return
         }
-        if (text.substring(0..1) == "./") {
+        if (text.length >= 2 && text.substring(0..1) == "./") {
             text = text.substring(1, text.length)
         }
 
@@ -207,7 +239,8 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     }
 
     enum class RecognizedCommands(val command: String) {
-        ClearHistory("clearhist");
+        ClearHistory("clearhist"),
+        ToggleHistory("togglehist");
 
         companion object {
             fun commands(): Array<String> {

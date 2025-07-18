@@ -3,6 +3,7 @@ package com.flooferland.ttvoice.data
 class TextToVoiceConfig {
     var general: GeneralConfig = GeneralConfig()
     var audio: AudioConfig = AudioConfig()
+    var ui: UiConfig = UiConfig()
 
     // Defs
     class GeneralConfig {
@@ -15,6 +16,9 @@ class TextToVoiceConfig {
         var device: Int = -1;
         var ttsBackend: TTSBackend = TTSBackend.Python
         var uiSounds: Boolean = true
+    }
+    class UiConfig {
+        var viewHistory: Boolean = true
     }
 
     enum class TTSBackend {
