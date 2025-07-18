@@ -57,23 +57,30 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
             GLFW.GLFW_KEY_UP -> {
                 if (screen.historyPointer > 0) {
                     screen.historyPointer -= 1
-                    text = SpeechScreen.history[screen.historyPointer]
-                    screen.updateHistoryWidget()
                 } else {
                     screen.historyPointer = SpeechScreen.history.lastIndex
                 }
+                text = SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
+                screen.updateHistoryWidget()
                 handled = true
                 SatisfyingNoises.playClick(1f)
             }
+
             GLFW.GLFW_KEY_DOWN -> {
+                var clear = false
                 if (screen.historyPointer < SpeechScreen.history.lastIndex) {
                     screen.historyPointer += 1
-                    text = SpeechScreen.history[screen.historyPointer]
-                    screen.updateHistoryWidget()
                 } else { // Clear the text for the most recent entry; easy way for the user to clear the textbox
-                    text = ""
-                    screen.historyPointer = 0
+                    if (modifiers != 0 || text.isEmpty()) {
+                        screen.historyPointer = 0
+                    } else {
+                        clear = true
+                        text = ""
+                    }
                 }
+                text = if (clear) ""
+                    else SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
+                screen.updateHistoryWidget(clear)
                 handled = true
                 SatisfyingNoises.playClick(-1f)
             }

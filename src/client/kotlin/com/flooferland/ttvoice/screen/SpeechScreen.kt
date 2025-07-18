@@ -14,8 +14,6 @@ import net.minecraft.text.Style
 import net.minecraft.text.Text
 import org.joml.Vector2i
 
-// TODO: Fix history being displayed / traveled through backwards
-
 // TODO: Make old history items get deleted after a while
 
 // TODO: Add an error label
@@ -29,26 +27,35 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var historyToggleButton: ButtonWidget
     //private lateinit var historyWidget: HistoryWidget
     private lateinit var historyTextWidget: MultilineTextWidget
-    var historyPointer = 0
+    var historyPointer: Int
+
+    init {
+        historyPointer = if (SpeechScreen.history.isNotEmpty()) SpeechScreen.history.lastIndex else 0
+    }
 
     override fun init() {
         val edgePad = Vector2i((width * 0.05).toInt(), (height * 0.05).toInt())
 
-        // Adding the voice text input textbox
+        // History
         run {
-            val size = Vector2Int((width * 0.95).toInt(), (height * 0.13).toInt())
-            textBox = SpeechTextInputWidget(
-                this,
-                textRenderer,
-                edgePad.x,
-                (height - (size.y / 2)) - edgePad.y,
-                size.x - edgePad.x,
-                size.y - edgePad.y,
-                Text.of("Input text here"),
-                { speakActionTriggered(); }
+            historyTextWidget = MultilineTextWidget(
+                Text.literal("History"),
+                textRenderer
             )
-            this.addDrawableChild(textBox)
+            this.addDrawableChild(historyTextWidget)
+            updateHistoryWidget()
         }
+        /*run {
+            val size = Vector2Int((width * 0.5).toInt(), 200)
+            historyWidget = HistoryWidget(
+                this,
+                MinecraftClient.getInstance(),
+                size.x, size.y,
+                20, size.y - 30,
+                50
+            )
+            this.addSelectableChild(historyWidget)
+        }*/
 
         // Button row
         run {
@@ -74,11 +81,12 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             // Toggle history button
             run {
-                historyToggleButton = ButtonWidget.builder(Text.of("Toggle history"))
-                    { b -> toggleHistoryAction() }
+                historyToggleButton = ButtonWidget.builder(Text.of("Hide history"))
+                    { b -> setHistoryVisible(!ModState.config.ui.viewHistory) }
                     .size((baseSize.x * 1.3).toInt(), baseSize.y)
                     .build()
                 widgets.add(historyToggleButton)
+                setHistoryVisible(ModState.config.ui.viewHistory)
             }
 
             // Placement
@@ -92,42 +100,38 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
         }
 
-        // History
+        // Adding the voice text input textbox
         run {
-            historyTextWidget = MultilineTextWidget(
-                Text.literal("History"),
-                textRenderer
-            )
-            this.addDrawableChild(historyTextWidget)
-            updateHistoryWidget()
-        }
-        /*run {
-            val size = Vector2Int((width * 0.5).toInt(), 200)
-            historyWidget = HistoryWidget(
+            val size = Vector2Int((width * 0.95).toInt(), (height * 0.13).toInt())
+            textBox = SpeechTextInputWidget(
                 this,
-                MinecraftClient.getInstance(),
-                size.x, size.y,
-                20, size.y - 30,
-                50
+                textRenderer,
+                edgePad.x,
+                (height - (size.y / 2)) - edgePad.y,
+                size.x - edgePad.x,
+                size.y - edgePad.y,
+                Text.of("Input text here"),
+                { speakActionTriggered(); }
             )
-            this.addSelectableChild(historyWidget)
-        }*/
+            this.addDrawableChild(textBox)
+        }
 
         // Initialization thingies
         setInitialFocus(textBox)
     }
 
     // Gets called when the history is updated
-    fun updateHistoryWidget() {
+    fun updateHistoryWidget(clear: Boolean = false) {
         val maxRows = 15
 
         // Setting history text
         val text = Text.literal("")
         for ((i, history) in SpeechScreen.history.withIndex()) {
             if (i > maxRows) continue
+            val isCurrent = (i == historyPointer) && !clear
             val style = Style.EMPTY
-                .withBold(i == historyPointer)
-                .withUnderline(i == historyPointer)
+                .withBold(isCurrent)
+                .withUnderline(isCurrent)
             text.append(
                 Text.literal(history)
                     .setStyle(style)
@@ -143,9 +147,13 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         historyTextWidget.setCentered(true)
     }
 
-    fun toggleHistoryAction() {
-        ModState.config.ui.viewHistory = !ModState.config.ui.viewHistory
-        historyTextWidget.visible = ModState.config.ui.viewHistory
+    fun setHistoryVisible(visible: Boolean) {
+        ModState.config.ui.viewHistory = visible
+        historyTextWidget.visible = visible
+        historyToggleButton.message = when (visible) {
+            true -> Text.of("Hide history")
+            false -> Text.of("Show history")
+        }
     }
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
@@ -182,7 +190,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                     updateHistoryWidget()
                 }
                 RecognizedCommands.ToggleHistory.command -> {
-                    toggleHistoryAction()
+                    setHistoryVisible(!ModState.config.ui.viewHistory)
                 }
                 else -> {
                     SatisfyingNoises.playDeny()
@@ -203,7 +211,6 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         val closestIndex = if (historyPointer > 0) historyPointer - 1 else 0
         if (SpeechScreen.history.isEmpty() || SpeechScreen.history[closestIndex] != text) {
             history.add(text)
-            historyPointer = SpeechScreen.history.lastIndex
             updateHistoryWidget()
         }
 
