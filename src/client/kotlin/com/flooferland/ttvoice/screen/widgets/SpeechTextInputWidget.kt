@@ -89,7 +89,6 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
                 handled = true
             }
         }
-        TextToVoiceClient.LOGGER.info("History pointer: ${screen.historyPointer}")
 
         if (!handled) {
             handled = super.keyPressed(keyCode, scanCode, modifiers)

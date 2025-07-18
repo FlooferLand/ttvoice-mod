@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.*
 import net.minecraft.text.Style
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import org.joml.Vector2i
 
 // TODO: Make old history items get deleted after a while
@@ -136,6 +137,12 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 Text.literal(history)
                     .setStyle(style)
             )
+            if (isCurrent) {
+                text.append(
+                    Text.literal(" (${i})")
+                        .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_GRAY, Formatting.ITALIC))
+                )
+            }
             text.append("\n")
         }
         historyTextWidget.message = text
@@ -183,14 +190,35 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // Commands
         if (text.firstOrNull() == '/') {
+            var args = text.split(" ")
+            var command = args.firstOrNull()
+            if (command == null) {
+                SatisfyingNoises.playDeny()
+                return
+            }
+            command = command.removePrefix("/")
+
             var commandSucceeded = true
-            when (text.removePrefix("/")) {
+            var resetScreen = false
+            args = args.subList(1, args.size)
+            when (command) {
                 RecognizedCommands.ClearHistory.command -> {
                     SpeechScreen.history.clear()
                     updateHistoryWidget()
+                    resetScreen = true
                 }
                 RecognizedCommands.ToggleHistory.command -> {
                     setHistoryVisible(!ModState.config.ui.viewHistory)
+                    resetScreen = true
+                }
+                RecognizedCommands.JumpHistory.command -> {
+                    val index = (args.firstOrNull() ?: "").toIntOrNull()
+                    if (index == null || index < 0 || index > SpeechScreen.history.lastIndex) {
+                        SatisfyingNoises.playDeny()
+                        return
+                    }
+                    historyPointer = index
+                    updateHistoryWidget()
                 }
                 else -> {
                     SatisfyingNoises.playDeny()
@@ -199,7 +227,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             if (commandSucceeded) {
                 SatisfyingNoises.playSuccess()
-                MinecraftClient.getInstance().setScreen(SpeechScreen());
+                if (resetScreen) MinecraftClient.getInstance().setScreen(SpeechScreen());
             }
             return
         }
@@ -260,7 +288,8 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
     enum class RecognizedCommands(val command: String) {
         ClearHistory("clearhist"),
-        ToggleHistory("togglehist");
+        ToggleHistory("togglehist"),
+        JumpHistory("hist");
 
         companion object {
             fun commands(): Array<String> {
