@@ -9,6 +9,8 @@ import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import javax.sound.sampled.AudioSystem
 
+// TODO: Implement native speaker
+
 object NativeSpeaker : ISpeaker {
     public override fun speak(text: String) {
         val audioStream = when (ModState.config.audio.ttsBackend) {

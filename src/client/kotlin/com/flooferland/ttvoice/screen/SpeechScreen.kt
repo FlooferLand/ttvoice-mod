@@ -11,6 +11,19 @@ import net.minecraft.client.gui.widget.*
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 
+// TODO: Remaster the UI to give more space in the middle of the screen;
+//       Do this by moving the speech stuff to the bottom and opening up space, while making the history list toggleable
+
+// TODO: Fix history being displayed / traveled through backwards
+
+// TODO: Make old history items get deleted after a while
+
+// TODO: Add an error label
+
+// TODO: Add a stop speaking button
+
+// TODO: Move history to entry list system, and make history elements clickable
+
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
     private lateinit var speakButton: ButtonWidget
