@@ -1,8 +1,8 @@
 package com.flooferland.ttvoice.speech
 
 import com.flooferland.ttvoice.VcPlugin
-import com.flooferland.ttvoice.data.ModConfig
-import com.flooferland.ttvoice.util.ModState
+import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.data.TextToVoiceConfig
 import javax.sound.sampled.AudioSystem
 
 public object SpeechUtil {
@@ -46,10 +46,10 @@ public object SpeechUtil {
 
     fun getBackend(): ISpeaker {
         return when (ModState.config.audio.ttsBackend) {
-            ModConfig.TTSBackend.Native, ModConfig.TTSBackend.MaryTTS -> {
+            TextToVoiceConfig.TTSBackend.Native -> {
                 NativeSpeaker
             }
-            ModConfig.TTSBackend.Python -> {
+            TextToVoiceConfig.TTSBackend.Python -> {
                 PythonSpeaker
             }
         }

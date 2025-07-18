@@ -1,7 +1,6 @@
 package com.flooferland.ttvoice.speech
 
-import com.flooferland.ttvoice.data.ModData
-import com.flooferland.ttvoice.util.ModState
+import com.flooferland.ttvoice.data.ModState
 import java.nio.file.Files
 
 object PythonSpeaker : ISpeaker {
@@ -9,10 +8,10 @@ object PythonSpeaker : ISpeaker {
 
     public override fun speak(text: String) {
         val tempFile: java.nio.file.Path? = Files.createTempFile("script", ".py")
-        if (tempFile == null || ModData.pythonScript == null) {
+        if (tempFile == null || ModState.pythonScript == null) {
             return
         }
-        Files.write(tempFile, ModData.pythonScript!!.toByteArray())
+        Files.write(tempFile, ModState.pythonScript!!.toByteArray())
         tempFile.toFile().deleteOnExit()
 
         val process = ProcessBuilder(

@@ -1,7 +1,7 @@
 package com.flooferland.ttvoice.registry
 
-import com.flooferland.ttvoice.util.ModState
-import com.flooferland.ttvoice.util.ModUtils.noAudioMixerError
+import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.util.Utils.noAudioMixerError
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.text.Text
 

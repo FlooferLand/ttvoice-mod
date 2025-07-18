@@ -1,13 +1,10 @@
 package com.flooferland.ttvoice
 
-import com.flooferland.ttvoice.data.ModConfig
 import com.flooferland.ttvoice.registry.ModCommands
+import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.registry.ModEvents
 import com.flooferland.ttvoice.registry.ModKeybinds
 import com.flooferland.ttvoice.registry.ModResources
-import com.flooferland.ttvoice.util.ModState
-import me.shedaniel.autoconfig.AutoConfig
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer
 import net.fabricmc.api.ClientModInitializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,8 +12,7 @@ import org.slf4j.LoggerFactory
 class TextToVoiceClient : ClientModInitializer {
     override fun onInitializeClient() {
         // Registering config
-        AutoConfig.register(ModConfig::class.java, ::Toml4jConfigSerializer);
-        ModState.config = AutoConfig.getConfigHolder(ModConfig::class.java).config
+        ModConfig.loadOrDefault()
 
         // Registering other things
         ModResources.registerReloaders()

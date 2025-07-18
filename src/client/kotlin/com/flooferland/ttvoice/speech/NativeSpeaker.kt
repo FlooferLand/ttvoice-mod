@@ -5,22 +5,17 @@ import java.nio.ByteOrder
 import javax.sound.sampled.AudioInputStream
 import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.VcPlugin
-import com.flooferland.ttvoice.data.ModConfig
-import com.flooferland.ttvoice.util.ModState
+import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.data.TextToVoiceConfig
 import javax.sound.sampled.AudioSystem
 
 object NativeSpeaker : ISpeaker {
     public override fun speak(text: String) {
         val audioStream = when (ModState.config.audio.ttsBackend) {
-            ModConfig.TTSBackend.Native -> {
+            TextToVoiceConfig.TTSBackend.Native -> {
                 TODO()
             }
-            ModConfig.TTSBackend.MaryTTS -> {
-                //if (mary == null) return;
-                //mary!!.generateAudio(text)
-                throw Exception("MaryTTS is currently disabled")
-            }
-            ModConfig.TTSBackend.Python -> {
+            TextToVoiceConfig.TTSBackend.Python -> {
                 throw Exception("Python is not allowed here")
             }
         }

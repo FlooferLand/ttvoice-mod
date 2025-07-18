@@ -55,9 +55,7 @@ dependencies {
 	modRuntimeOnly "maven.modrinth:simple-voice-chat:fabric-${voicechat_mod_version}"
 
 	// Config
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
-		exclude(group: "net.fabricmc.fabric-api")
-	}
+	implementation "com.moandjiezana.toml:toml4j:${toml4j_version}"
 	modApi "com.terraformersmc:modmenu:${mod_menu_version}"
 
 	// Outside dependencies
@@ -68,7 +66,7 @@ dependencies {
 
 // Injecting gradle.properties into other files
 // TODO: Get this piece of fucking shit to work,
-//       its 6 fucking AM and I can't go to bed because I'm dissatisfied I can't automagically expand shit inside my fabric.mod.fucking.json
+//       its 6 fucking AM and I can"t go to bed because I"m dissatisfied I can"t automagically expand shit inside my fabric.mod.fucking.json
 processResources {
 	exclude("**/*.lnk")
 

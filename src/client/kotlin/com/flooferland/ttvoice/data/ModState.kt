@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.data
 
-object ModData {
+public object ModState {
+    lateinit var config: TextToVoiceConfig
     var pythonScript: String? = null
 }

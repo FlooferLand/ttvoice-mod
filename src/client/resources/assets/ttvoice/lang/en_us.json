@@ -1,4 +1,7 @@
 {
+    "category.ttvoice.general": "Text to Voice",
+    "key.ttvoice.speak": "Open speech screen",
+
     "-- Config screen": "",
     "config.ttvoice.title": "Text to Voice config",
     "config.ttvoice.category.general": "General",

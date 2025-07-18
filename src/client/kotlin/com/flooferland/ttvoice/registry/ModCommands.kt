@@ -1,12 +1,8 @@
 package com.flooferland.ttvoice.registry
 
-import com.flooferland.ttvoice.TextToVoiceClient
-import com.flooferland.ttvoice.VcPlugin
-import com.flooferland.ttvoice.data.ModConfig
-import com.flooferland.ttvoice.speech.ISpeaker
-import com.flooferland.ttvoice.speech.PythonSpeaker
 import com.flooferland.ttvoice.speech.SpeechUtil
-import com.flooferland.ttvoice.util.ModState
+import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
 import com.mojang.brigadier.arguments.StringArgumentType.getString
@@ -17,10 +13,13 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.command.CommandSource
+import net.minecraft.sound.SoundEvents
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.text.Text
+import net.minecraft.util.Colors
+import net.minecraft.util.math.ColorHelper
 import javax.sound.sampled.AudioSystem
 
 object ModCommands {
@@ -50,8 +49,16 @@ object ModCommands {
             context.source.sendError(Text.of("Selected device doesn't exist"))
             return 0
         }
+        SatisfyingNoises.playSuccess()
         ModState.config.audio.device = mixer
-        context.source.sendFeedback(Text.of("Audio mixer was successfully set to ${mixerInfo[mixer]}"))
+        context.source.sendFeedback(
+            Text.literal("\nAudio mixer was successfully set to ")
+                .append(
+                    Text.literal(mixerInfo[mixer].name)
+                        .setStyle(Style.EMPTY.withBold(true)
+                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Device ID $mixer"))))
+                )
+        )
         return 1
     }
 
@@ -59,13 +66,16 @@ object ModCommands {
         val mixerText = Text.empty()
         val mixerInfo = AudioSystem.getMixerInfo()
         for ((i, mixer) in mixerInfo.withIndex()) {
+            val isVoicemeeterOutMixer = mixer.description.lowercase().contains("port mixer")
             mixerText.append(Text.of("- "));
             mixerText.append(
                 Text.literal(mixer.name)
                     .setStyle(
                         Style.EMPTY
-                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(mixer.description)))
-                            .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mixer setExact ${i}"))
+                            .withBold(isVoicemeeterOutMixer)
+                            .withColor(if (isVoicemeeterOutMixer) ColorHelper.Argb.getArgb(255, 150, 255, 150) else Colors.WHITE)
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${mixer.description} (Device ID $i)")))
+                            .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ttvoice mixer setExact $i"))
                     )
             )
             mixerText.append(Text.of("\n"))
