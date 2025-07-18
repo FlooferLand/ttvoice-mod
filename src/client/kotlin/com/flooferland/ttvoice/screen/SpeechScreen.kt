@@ -25,6 +25,7 @@ import org.joml.Vector2i
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
     private lateinit var speakButton: ButtonWidget
+    private lateinit var stopButton: ButtonWidget
     private lateinit var historyToggleButton: ButtonWidget
     //private lateinit var historyWidget: HistoryWidget
     private lateinit var historyTextWidget: MultilineTextWidget
@@ -62,6 +63,14 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                     .size(baseSize.x, baseSize.y)
                     .build()
                 widgets.add(speakButton)
+            }
+            // Stop speaking button
+            run {
+                stopButton = ButtonWidget.builder(Text.of("Stop"))
+                    { b -> stopActionTriggered() }
+                    .size(baseSize.x, baseSize.y)
+                    .build()
+                widgets.add(stopButton)
             }
             // Toggle history button
             run {
@@ -202,6 +211,10 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         SpeechUtil.speak(text)
         SatisfyingNoises.playConfirm()
         MinecraftClient.getInstance().setScreen(null);
+    }
+
+    fun stopActionTriggered() {
+        SpeechUtil.stopSpeaking()
     }
 
     /// Speech history widget
