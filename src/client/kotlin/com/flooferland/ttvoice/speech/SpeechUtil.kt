@@ -40,8 +40,15 @@ public object SpeechUtil {
     }
 
     fun stopSpeaking() {
-        val speaker: ISpeaker = getBackend()
-        speaker.shutUp()
+        getBackend().shutUp()
+    }
+
+    fun playTest() {
+        getBackend().playTest()
+    }
+
+    fun isSpeaking(): Boolean {
+        return getBackend().isSpeaking()
     }
 
     fun getBackend(): ISpeaker {

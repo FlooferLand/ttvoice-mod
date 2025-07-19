@@ -36,4 +36,8 @@ object PythonSpeaker : ISpeaker {
         speaking.forEach { it.destroy() }
         speaking.removeIf { p -> !p.isAlive }
     }
+
+    override fun isSpeaking(): Boolean {
+        return speaking.any { p -> p.isAlive }
+    }
 }

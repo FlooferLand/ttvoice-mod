@@ -109,7 +109,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             for ((i, widget) in widgets.withIndex()) {
                 val pad = 10
                 widget.x = offset
-                widget.y = basePosition.y + (if (widget is TextWidget) (baseSize.y / 2) else 0 )
+                widget.y = basePosition.y + (if (widget is SpeechInfoLabelWidget) (baseSize.y / 2) else 0 )
                 offset += widget.width + pad
                 addDrawableChild(widget)
             }
@@ -263,6 +263,10 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         SpeechUtil.speak(text)
         SatisfyingNoises.playConfirm()
         MinecraftClient.getInstance().setScreen(null);
+    }
+
+    override fun tick() {
+        stopButton.active = SpeechUtil.isSpeaking()
     }
 
     fun stopActionTriggered() {

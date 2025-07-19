@@ -43,6 +43,10 @@ object NativeSpeaker : ISpeaker {
 
     }
 
+    override fun isSpeaking(): Boolean {
+        return false
+    }
+
     fun audioStreamToShortArray(inputStream: AudioInputStream): ShortArray {
         val byteList = mutableListOf<Byte>()
         val buffer = ByteArray(1024)
