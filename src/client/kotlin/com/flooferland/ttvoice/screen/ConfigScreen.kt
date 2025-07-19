@@ -1,21 +1,28 @@
 package com.flooferland.ttvoice.screen
 
+import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.data.TextToVoiceConfig
+import com.flooferland.ttvoice.data.TextToVoiceConfig.AudioConfig
+import com.flooferland.ttvoice.registry.ModConfig
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.Element
-import net.minecraft.client.gui.Selectable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.*
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
+import org.joml.Vector2i
 import javax.sound.sampled.AudioSystem
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 private val title = Text.translatable("config.${MOD_ID}.title")
 private val WHITE_COLOR: Int = ColorHelper.Argb.getArgb(255, 255, 255, 255)
 
 class ConfigScreen(val parent: Screen) : Screen(title) {
-    private lateinit var scrollContainer: ConfigScreenScrollable
 
     override fun init() {
         // Back button
@@ -29,88 +36,83 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
             addDrawableChild(backButton)
         }
 
-        // Config content
-        scrollContainer = ConfigScreenScrollable(
-            this,
-            MinecraftClient.getInstance(),
-            width, height,
-            30, height - 30,
-            200
-        )
-        addDrawableChild(scrollContainer)
+        // Auto-settings
+        for (categoryProp in TextToVoiceConfig::class.memberProperties) {
+            val categoryName = categoryProp.name
+            val categoryValue = categoryProp.get(ModState.config) ?: continue
+
+            for ((i, field) in categoryValue::class.memberProperties.withIndex()) {
+                val fieldName = field.name
+                val fieldValue = (field as KProperty1<Any, *>).get(categoryValue) ?: continue
+
+                // Manually displayed
+                when (fieldName) {
+                    AudioConfig::device.name -> {
+                        // Audio devices button
+                        run {
+                            val labelText = Text.translatable("config.${MOD_ID}.field.audio.device")
+                            val size = Pair(300, 20)
+                            val b = ButtonWidget.Builder(Text.of("Open device picker"))
+                            { MinecraftClient.getInstance().setScreen(SelectDeviceScreen(this)) }
+                                .position(
+                                    (parent.width * 0.5).toInt() - (size.first / 2),
+                                    (parent.height * 0.5).toInt() - (size.second / 2),
+                                )
+                                .size(size.first, size.second)
+                                .build()
+                            val label = TextWidget(20, b.y, parent.width / 2, 20, labelText, textRenderer).alignLeft()
+                            addDrawableChild(b)
+                            addDrawableChild(label)
+                        }
+                        return
+                    }
+                }
+
+                // Automatically displayed
+                val position = Vector2i(
+                    width / 2, i * 30
+                )
+                val type = field.returnType;
+                val translationString = Text.translatable("config.${MOD_ID}.field.${categoryName}.${fieldName}");
+                @Suppress("UNCHECKED_CAST")
+                when (type.classifier) {
+                    Boolean::class -> {
+                        val thing = object : CheckboxWidget(position.x, position.y, 0, 0, translationString, fieldValue as Boolean) {
+                            override fun onClick(mouseX: Double, mouseY: Double) {
+                                super.onClick(mouseX, mouseY)
+                                (field as KMutableProperty1<Any, Boolean>).set(categoryValue, !(fieldValue as Boolean))
+                            }
+                        }
+                        addDrawableChild(thing)
+                    }
+                    String::class -> {
+                        val thing = TextFieldWidget(textRenderer, position.x, position.y, 0, 0, translationString)
+                        thing.setChangedListener { v ->
+                            (field as KMutableProperty1<Any, String>).set(categoryValue, v)
+                        }
+                        addDrawableChild(thing)
+                    }
+                    else -> {
+                        println("Unknown type in config ${categoryName}.${fieldName} (${type.classifier})")
+                    }
+                }
+            }
+        }
+        recalculateDimensions()
+    }
+
+    fun recalculateDimensions() {
+
+    }
+
+    override fun resize(client: MinecraftClient?, width: Int, height: Int) {
+        super.resize(client, width, height)
+        recalculateDimensions()
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         context.drawCenteredTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, width / 2, 15, WHITE_COLOR)
-        scrollContainer.render(context, mouseX, mouseY, delta)
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
-    }
-
-    // Scrollable widget
-    private class ConfigScreenScrollable : ElementListWidget<ConfigScreenScrollable.Entry> {
-        val screen: ConfigScreen
-        constructor(screen: ConfigScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int, itemHeight: Int)
-            : super(client, width, height, top, bottom, itemHeight) {
-                this.screen = screen
-            }
-
-        override fun enableScissor(context: DrawContext) {
-            context.enableScissor(this.left, this.top + 4, this.right, this.bottom)
-        }
-
-        override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-            super.render(context, mouseX, mouseY, delta)
-            //screen.render(context, mouseX, mouseY, delta)
-        }
-
-        private class Entry(val screen: ConfigScreen, val parent: ConfigScreenScrollable) : ElementListWidget.Entry<ConfigScreenScrollable.Entry>() {
-            val widgets: ArrayList<ClickableWidget> = arrayListOf()
-
-            init {
-                // Audio devices button
-                run {
-                    val labelText = Text.translatable("config.${MOD_ID}.field.audio.device")
-                    val size = Pair(300, 20)
-                    val b = CyclingButtonWidget.Builder<Int>({ v ->
-                        return@Builder Text.of(AudioSystem.getMixerInfo().get(v).name)
-                    })
-                        .values((AudioSystem.getMixerInfo().lastIndex downTo 0).toList())
-                        .build(
-                            (parent.width * 0.5).toInt() - (size.first / 2),
-                            (parent.height * 0.5).toInt() - (size.second / 2),
-                            size.first, size.second,
-                            labelText
-                        )
-                    val label = TextWidget(20, b.y, parent.width / 2, 20, labelText, screen.textRenderer).alignLeft()
-                    widgets.add(label)
-                    widgets.add(b)
-                }
-            }
-
-            override fun render(
-                context: DrawContext,
-                index: Int,
-                y: Int,
-                x: Int,
-                entryWidth: Int,
-                entryHeight: Int,
-                mouseX: Int,
-                mouseY: Int,
-                hovered: Boolean,
-                delta: Float
-            ) {
-                for (widget in widgets) {
-                    widget.render(context, mouseX, mouseY, delta)
-                }
-            }
-
-            override fun children(): List<Element> {
-                return widgets
-            }
-
-            override fun selectableChildren(): List<Selectable> {
-                return widgets
-            }
-        }
     }
 }
