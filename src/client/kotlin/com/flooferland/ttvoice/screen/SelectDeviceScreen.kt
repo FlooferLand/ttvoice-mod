@@ -78,7 +78,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
 
             // Backup in case the screen is too small
             singleButton = CyclingButtonWidget.builder<Int>()
-                { v -> Text.of(mixers.get(ModState.config.audio.device).name) }
+                { v -> Text.of(mixers.getOrNull(ModState.config.audio.device)?.name ?: "Unknown") }
                 .values((mixers.size downTo 0).toList())
                 .build(
                     (width / 2)  - (buttonSize.x / 2), height / 2,
