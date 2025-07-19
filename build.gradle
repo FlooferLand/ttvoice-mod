@@ -55,6 +55,7 @@ dependencies {
 	modRuntimeOnly "maven.modrinth:simple-voice-chat:fabric-${voicechat_mod_version}"
 
 	// Config
+	implementation "com.moandjiezana.toml:toml4j:${toml4j_version}"
 	include "com.moandjiezana.toml:toml4j:${toml4j_version}"
 	modApi "com.terraformersmc:modmenu:${mod_menu_version}"
 
