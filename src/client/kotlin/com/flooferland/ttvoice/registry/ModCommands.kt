@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.registry
 
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.util.SatisfyingNoises
@@ -13,7 +14,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.command.CommandSource
-import net.minecraft.sound.SoundEvents
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
@@ -23,6 +23,32 @@ import net.minecraft.util.math.ColorHelper
 import javax.sound.sampled.AudioSystem
 
 object ModCommands {
+    enum class Commands(path: String) {
+        Speak("speak"),
+        StopSpeaking("stopSpeaking"),
+        VoiceSet("voice set"),
+        MixerSet("mixer set"),
+        MixerSetExact("mixer setExact");
+
+        val command: String
+        val subcommand: String?
+        init {
+            val path = path.split(" ");
+            command = path[0]
+            subcommand = path.getOrNull(1)
+        }
+
+        fun withParams(vararg params: Any): String {
+            val command = getFullPath()
+            if (params.isEmpty())
+                return command
+            return "$command ${params.joinToString(" ")}"
+        }
+        fun getFullPath(): String {
+            return "/$MOD_ID $command" + (if (subcommand != null) " $subcommand" else "")
+        }
+    }
+
     fun speakCommand(context: CommandContext<FabricClientCommandSource>): Int {
         val text = getString(context, "text")
         SpeechUtil.speak(text)
@@ -75,7 +101,7 @@ object ModCommands {
                             .withBold(isVoicemeeterOutMixer)
                             .withColor(if (isVoicemeeterOutMixer) ColorHelper.Argb.getArgb(255, 150, 255, 150) else Colors.WHITE)
                             .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${mixer.description} (Device ID $i)")))
-                            .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ttvoice mixer setExact $i"))
+                            .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.MixerSetExact.withParams(i)))
                     )
             )
             mixerText.append(Text.of("\n"))
@@ -86,7 +112,7 @@ object ModCommands {
 
     fun registerCommands() {
         ClientCommandRegistrationCallback.EVENT.register() { dispatcher, registryAccess ->
-            val speakCommandLiteral = ClientCommandManager.literal("speak")
+            val speakCommandLiteral = ClientCommandManager.literal(Commands.Speak.command)
                 .executes { context ->
                     context.source.sendError(Text.of("Provide the text to speak with!"));
                     return@executes 0
@@ -95,17 +121,17 @@ object ModCommands {
                     argument("text", string())
                         .executes(ModCommands::speakCommand)
                 )
-            val stopSpeakingCommandLiteral = ClientCommandManager.literal("stopSpeaking")
+            val stopSpeakingCommandLiteral = ClientCommandManager.literal(Commands.StopSpeaking.command)
                 .executes(ModCommands::stopSpeaking)
 
             val ttvoice = dispatcher.register(
-                ClientCommandManager.literal("ttvoice")
+                ClientCommandManager.literal(MOD_ID)
                     .then(speakCommandLiteral)
                     .then(stopSpeakingCommandLiteral)
                     .then(
-                        ClientCommandManager.literal("voice")
+                        ClientCommandManager.literal(Commands.VoiceSet.command)
                             .then(
-                                ClientCommandManager.literal("set").then(
+                                ClientCommandManager.literal(Commands.VoiceSet.subcommand).then(
                                     argument("voice", string())
                                         .executes(ModCommands::setVoice)
                                         /*.suggests({ context, builder ->
@@ -115,9 +141,9 @@ object ModCommands {
                             )
                     )
                     .then(
-                        ClientCommandManager.literal("mixer")
+                        ClientCommandManager.literal(Commands.MixerSet.command)
                             .then(
-                                ClientCommandManager.literal("setExact").then(
+                                ClientCommandManager.literal(Commands.MixerSetExact.subcommand).then(
                                     argument("mixer", integer())
                                         .executes(ModCommands::setMixer)
                                         .suggests({ context, builder ->
@@ -127,7 +153,7 @@ object ModCommands {
                                 )
                             )
                             .then(
-                                ClientCommandManager.literal("set")
+                                ClientCommandManager.literal(Commands.MixerSet.subcommand)
                                     .executes(ModCommands::setMixerFromList)
                             )
                     )

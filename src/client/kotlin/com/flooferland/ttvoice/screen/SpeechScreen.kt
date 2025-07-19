@@ -1,6 +1,7 @@
 package com.flooferland.ttvoice.screen
 
 import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.screen.widgets.SpeechInfoLabelWidget
 import com.flooferland.ttvoice.screen.widgets.SpeechTextInputWidget
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
@@ -26,9 +27,16 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var speakButton: ButtonWidget
     private lateinit var stopButton: ButtonWidget
     private lateinit var historyToggleButton: ButtonWidget
+    private lateinit var infoLabel: SpeechInfoLabelWidget
     //private lateinit var historyWidget: HistoryWidget
     private lateinit var historyTextWidget: MultilineTextWidget
     var historyPointer: Int
+    var error: Error? = null
+        get() = field
+        set(value) {
+            field = value
+            infoLabel.update()
+        }
 
     init {
         historyPointer = if (SpeechScreen.history.isNotEmpty()) SpeechScreen.history.lastIndex else 0
@@ -89,13 +97,19 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 widgets.add(historyToggleButton)
                 setHistoryVisible(ModState.config.ui.viewHistory)
             }
+            // Info label
+            run {
+                infoLabel = SpeechInfoLabelWidget(this, textRenderer)
+                widgets.add(infoLabel)
+                infoLabel.update()
+            }
 
             // Placement
             var offset = edgePad.x + basePosition.x
             for ((i, widget) in widgets.withIndex()) {
                 val pad = 10
                 widget.x = offset
-                widget.y = basePosition.y
+                widget.y = basePosition.y + (if (widget is TextWidget) (baseSize.y / 2) else 0 )
                 offset += widget.width + pad
                 addDrawableChild(widget)
             }
@@ -186,6 +200,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             SatisfyingNoises.playDeny()
             return
         }
+        error = null
         println(text)
 
         // Commands
@@ -214,6 +229,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 RecognizedCommands.JumpHistory.command -> {
                     val index = (args.firstOrNull() ?: "").toIntOrNull()
                     if (index == null || index < 0 || index > SpeechScreen.history.lastIndex) {
+                        error = Error("Invalid index")
                         SatisfyingNoises.playDeny()
                         return
                     }
@@ -222,6 +238,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 }
                 else -> {
                     SatisfyingNoises.playDeny()
+                    error = Error("Command '${command}' not found")
                     commandSucceeded = false
                 }
             }
