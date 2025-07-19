@@ -33,10 +33,6 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         }
     }
 
-    init {
-        tooltip = Tooltip.of(Text.of("Info label"))
-    }
-
     override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {
     }
 
@@ -49,14 +45,12 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         var text: MutableText = Text.literal("No messages")
         if (ModState.config.audio.device < devices.size) {
             text = Text.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}")
-                .setStyle(
-                    Style.EMPTY
-                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Click to change devices")))
-                        .withClickEvent(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, ModCommands.Commands.MixerSet.getFullPath()))
-                )
+            tooltip = Tooltip.of(Text.of("Click to change the device"))
         }
         if (screen.error?.message != null) {
-            text = Text.literal(screen.error!!.message!!).setStyle(Style.EMPTY.withFormatting(Formatting.DARK_RED))
+            text = Text.literal(screen.error!!.message!!)
+                .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_RED))
+            tooltip = Tooltip.of(Text.of("Error"))
         }
         message = text
     }

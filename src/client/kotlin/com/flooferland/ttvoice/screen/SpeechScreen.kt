@@ -16,12 +16,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.joml.Vector2i
 
-// TODO: Make old history items get deleted after a while
-
-// TODO: Add an error label
-
-// TODO: Move history to entry list system, and make history elements clickable
-
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
     private lateinit var speakButton: ButtonWidget
@@ -69,7 +63,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         // Button row
         run {
             val baseSize = Vector2Int(70, 30)
-            val basePosition = Vector2Int(0, (height * 0.83).toInt() - (baseSize.y / 2))
+            val basePosition = Vector2Int(0, height - 80)
             val widgets = ArrayList<ClickableWidget>()
 
             // Speak button
@@ -117,14 +111,14 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // Adding the voice text input textbox
         run {
-            val size = Vector2Int((width * 0.95).toInt(), (height * 0.13).toInt())
+            val size = Vector2Int((width * 0.95).toInt(), 20)
             textBox = SpeechTextInputWidget(
                 this,
                 textRenderer,
                 edgePad.x,
-                (height - (size.y / 2)) - edgePad.y,
+                (height - size.y) - edgePad.y,
                 size.x - edgePad.x,
-                size.y - edgePad.y,
+                size.y,
                 Text.of("Input text here"),
                 { speakActionTriggered(); }
             )
