@@ -16,7 +16,7 @@ object PythonSpeaker : ISpeaker {
 
         val process = ProcessBuilder(
             ModState.config.general.pythonPath, tempFile.toAbsolutePath().toString(),
-            text, // Text
+            text.replace('\"', '\''), // Text
             ModState.config.audio.device.toString() // Device
         )
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)

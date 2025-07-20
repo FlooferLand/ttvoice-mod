@@ -15,7 +15,7 @@ speedy = False #speedy = int(sys.argv[3])
 
 engine.setProperty("voice", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-GB_HAZEL_11.0")
 engine.setProperty("rate", 500 if speedy else 190)
-engine.save_to_file(f"<pitch middle=\"-500\">{text}</pitch>", audio_file)
+engine.save_to_file(f"<pitch middle=\"-500\"> {text} </pitch>", audio_file)
 #engine.save_to_file(text, audio_file)
 engine.runAndWait()
 
