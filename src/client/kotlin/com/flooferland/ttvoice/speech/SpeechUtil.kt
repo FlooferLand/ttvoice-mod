@@ -5,8 +5,8 @@ import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import javax.sound.sampled.AudioSystem
 
-public object SpeechUtil {
-    fun speak(text: String) {
+public object SpeechUtil : ISpeaker {
+    override fun speak(text: String) {
         // Mixer parsing
         var selectedMixer = -1
         val allMixers = AudioSystem.getMixerInfo()
@@ -39,16 +39,24 @@ public object SpeechUtil {
         }
     }
 
-    fun stopSpeaking() {
+    override fun shutUp() {
         getBackend().shutUp()
     }
 
-    fun playTest() {
+    override fun playTest() {
         getBackend().playTest()
     }
 
-    fun isSpeaking(): Boolean {
+    override fun isSpeaking(): Boolean {
         return getBackend().isSpeaking()
+    }
+
+    override fun load() {
+        getBackend().load()
+    }
+
+    override fun unload() {
+        getBackend().unload()
     }
 
     fun getBackend(): ISpeaker {

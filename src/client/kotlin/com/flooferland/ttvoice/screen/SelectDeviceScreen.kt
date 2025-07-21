@@ -68,7 +68,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                         ModConfig.save()
                         updateButtonStyles()
 
-                        SpeechUtil.stopSpeaking()
+                        SpeechUtil.shutUp()
                         SpeechUtil.playTest()
                     }
                     .position(position.x, position.y)
@@ -90,7 +90,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                     ModState.config.audio.device = v
                     ModConfig.save()
 
-                    SpeechUtil.stopSpeaking()
+                    SpeechUtil.shutUp()
                     SpeechUtil.playTest()
                 }
             addDrawableChild(singleButton)

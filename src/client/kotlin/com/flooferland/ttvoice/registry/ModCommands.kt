@@ -58,7 +58,7 @@ object ModCommands {
         return 1
     }
     fun stopSpeaking(context: CommandContext<FabricClientCommandSource>): Int {
-        SpeechUtil.stopSpeaking()
+        SpeechUtil.shutUp()
         return 1
     }
 

@@ -6,6 +6,10 @@ import java.nio.file.Files
 object PythonSpeaker : ISpeaker {
     val speaking = arrayListOf<Process>()
 
+    // TODO: Preload and unload the script and communicate with it via stdin to remove Python process startup delays
+    override fun load() {}
+    override fun unload() {}
+
     public override fun speak(text: String) {
         val tempFile: java.nio.file.Path? = Files.createTempFile("script", ".py")
         if (tempFile == null || ModState.pythonScript == null) {

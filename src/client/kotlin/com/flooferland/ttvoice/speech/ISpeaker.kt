@@ -4,7 +4,11 @@ interface ISpeaker {
     public fun speak(text: String)
     public fun shutUp()
     public fun isSpeaking(): Boolean
+
     public fun playTest() {
         speak("Audio test")
     }
+
+    public fun load() {}
+    public fun unload() {}
 }

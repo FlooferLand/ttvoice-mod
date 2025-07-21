@@ -264,7 +264,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     }
 
     fun stopActionTriggered() {
-        SpeechUtil.stopSpeaking()
+        SpeechUtil.shutUp()
     }
 
     /// Speech history widget
