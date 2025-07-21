@@ -98,7 +98,11 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
             addDrawableChild(saveButton)
 
             // Error / warning
-            noticeLabel = TextWidget(pad.x + (size.x * 2), height - size.y - pad.y, 500, 20, Text.of(""), textRenderer).alignLeft()
+            noticeLabel = TextWidget(
+                pad.x + (size.x * 2.5).toInt(), height - size.y,
+                500, 20,
+                Text.of(""), textRenderer
+            ).alignLeft()
             addDrawableChild(noticeLabel)
         }
 
@@ -219,7 +223,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
     override fun resize(client: MinecraftClient, width: Int, height: Int) {
         super.resize(client, width, height)
-        autoSettings()
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
