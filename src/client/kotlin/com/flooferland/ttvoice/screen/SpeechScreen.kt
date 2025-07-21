@@ -16,6 +16,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.joml.Vector2i
 
+const val debugDelay = true
+
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
     private lateinit var speakButton: ButtonWidget
@@ -31,6 +33,8 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             field = value
             infoLabel.update()
         }
+
+    var debugTestStart: Long = 0
 
     init {
         historyPointer = if (SpeechScreen.history.isNotEmpty()) SpeechScreen.history.lastIndex else 0
@@ -197,6 +201,11 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         error = null
         println(text)
 
+        // Debug
+        if (debugDelay) {
+            text = "We are number one."
+        }
+
         // Commands
         if (text.firstOrNull() == '/') {
             var args = text.split(" ")
@@ -255,12 +264,24 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // Speaking
         SpeechUtil.speak(text)
+        if (debugDelay) {
+            debugTestStart = System.currentTimeMillis()
+        } else {
+            MinecraftClient.getInstance().setScreen(null);
+        }
         SatisfyingNoises.playConfirm()
-        MinecraftClient.getInstance().setScreen(null);
     }
 
     override fun tick() {
-        stopButton.active = SpeechUtil.isSpeaking()
+        val speaking = SpeechUtil.isSpeaking()
+        stopButton.active = speaking
+
+        @Suppress("SimplifyBooleanWithConstants")
+        if (debugDelay && !speaking && debugTestStart.toInt() != 0) {
+            val endTime = System.currentTimeMillis()
+            infoLabel.setBenchmarkResult(startMillis = debugTestStart, endMillis = endTime)
+            debugTestStart = 0
+        }
     }
 
     fun stopActionTriggered() {
