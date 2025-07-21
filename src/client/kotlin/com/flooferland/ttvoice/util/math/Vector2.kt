@@ -25,6 +25,24 @@ public class Vector2Int(val x: Int, val y: Int) : IVector<Vector2Int> {
     }
 }
 
+public class MutVector2Int(var x: Int, var y: Int) : IVector<MutVector2Int> {
+    override fun plus(other: MutVector2Int): MutVector2Int {
+        return MutVector2Int(x + other.x, y + other.y)
+    }
+    override fun minus(other: MutVector2Int): MutVector2Int {
+        return MutVector2Int(x - other.x, y - other.y)
+    }
+    override fun times(other: MutVector2Int): MutVector2Int {
+        return MutVector2Int(x * other.x, y * other.y)
+    }
+    override fun div(other: MutVector2Int): MutVector2Int {
+        return MutVector2Int(x / other.x, y / other.y)
+    }
+    fun toFloat() : Vector2Float {
+        return Vector2Float(x.toFloat(), y.toFloat())
+    }
+}
+
 public class Vector2Float(val x: Float, val y: Float) : IVector<Vector2Float> {
     override fun plus(other: Vector2Float): Vector2Float {
         return Vector2Float(x + other.x, y + other.y)

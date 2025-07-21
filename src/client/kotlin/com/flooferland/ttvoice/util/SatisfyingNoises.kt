@@ -21,7 +21,7 @@ object SatisfyingNoises {
     }
 
     private fun tryPlay(event: SoundEvent, volume: Float=1f, pitch: Float=1f) {
-        if (!ModState.config.audio.uiSounds) return
+        if (!ModState.config.ui.sounds) return
         val client = MinecraftClient.getInstance()
         client.soundManager.play(PositionedSoundInstance.master(event, pitch, volume * 0.4f))
     }

@@ -4,12 +4,15 @@
 
     "-- Config screen": "",
     "config.ttvoice.title": "Text to Voice config",
-    "config.ttvoice.category.general": "General",
-    "config.ttvoice.field.general.useSimpleVoiceChat": "Route audio through Simple Voice Chat",
-    "config.ttvoice.field.general.broadcastToAudioMixer": "Route audio through device",
-    "config.ttvoice.field.general.pythonPath": "Python path",
-    "config.ttvoice.field.general.pythonPath.tooltip": "For the Python audio backend",
-    "config.ttvoice.category.audio": "Audio",
-    "config.ttvoice.field.audio.device": "Audio device",
-    "config.ttvoice.field.audio.ttsBackend": "Text-to-speech backend"
+    "config.ttvoice.general": "General",
+    "config.ttvoice.general.useSimpleVoiceChat": "Route audio through Simple Voice Chat",
+    "config.ttvoice.general.broadcastToAudioMixer": "Route audio through device",
+    "config.ttvoice.general.pythonPath": "Python path",
+    "config.ttvoice.general.pythonPath.tooltip": "For the Python audio backend",
+    "config.ttvoice.audio": "Audio",
+    "config.ttvoice.audio.device": "Set audio device",
+    "config.ttvoice.audio.ttsBackend": "Text-to-speech backend",
+    "config.ttvoice.ui": "User Interface",
+    "config.ttvoice.ui.sounds": "UI sounds",
+    "config.ttvoice.ui.viewHistory": "View speech history"
 }

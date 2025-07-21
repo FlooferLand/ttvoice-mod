@@ -1,6 +1,7 @@
 package com.flooferland.ttvoice.screen
 
 import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.math.Vector2Int
 import net.minecraft.client.MinecraftClient
@@ -64,6 +65,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                 val button = ButtonWidget.builder(Text.of(mixer.name))
                     { b ->
                         ModState.config.audio.device = i
+                        ModConfig.save()
                         updateButtonStyles()
 
                         SpeechUtil.stopSpeaking()
@@ -86,6 +88,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                     Text.of("Audio output device")
                 ) { b, v ->
                     ModState.config.audio.device = v
+                    ModConfig.save()
 
                     SpeechUtil.stopSpeaking()
                     SpeechUtil.playTest()

@@ -43,7 +43,7 @@ object ModConfig {
     fun save() {
         // Serialization
         val toml = runCatching {
-            TomlWriter().write(TextToVoiceConfig::class.java, configPath.toFile())
+            TomlWriter().write(ModState.config, configPath.toFile())
         }
         toml.onFailure({ error ->
             error.printStackTrace()
