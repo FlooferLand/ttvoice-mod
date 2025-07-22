@@ -15,7 +15,7 @@ object PythonResourceReloader : SimpleSynchronousResourceReloadListener, Identif
 
     override fun reload(manager: ResourceManager?) {
         manager ?: return
-        val file = manager.getResource(Identifier.of(MOD_ID, "tts.py"))
+        val file = manager.getResource(Identifier.of(MOD_ID, "python/tts.py"))
         val data = file.getOrNull()
         if (data == null) return
         ModState.pythonScript = data.inputStream.readBytes().toString(Charsets.UTF_8);

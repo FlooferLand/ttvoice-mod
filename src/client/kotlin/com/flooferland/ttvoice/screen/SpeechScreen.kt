@@ -16,7 +16,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.joml.Vector2i
 
-const val debugDelay = true
+const val debugDelay = false
 
 class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget

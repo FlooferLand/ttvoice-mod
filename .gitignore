@@ -1,3 +1,6 @@
+# Custom
+venv/**
+
 # Compiled class file
 *.class
 

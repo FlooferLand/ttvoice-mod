@@ -6,11 +6,16 @@ import com.flooferland.ttvoice.registry.ModEvents
 import com.flooferland.ttvoice.registry.ModKeybinds
 import com.flooferland.ttvoice.registry.ModResources
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.loader.api.FabricLoader
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 
 class TextToVoiceClient : ClientModInitializer {
     override fun onInitializeClient() {
+        // Setting up mod data files
+        Files.createDirectories(dataDir)
+
         // Registering config
         ModConfig.loadOrDefault()
 
@@ -24,5 +29,6 @@ class TextToVoiceClient : ClientModInitializer {
     companion object {
         const val MOD_ID: String = "ttvoice"
         val LOGGER: Logger = LoggerFactory.getLogger(MOD_ID)
+        val dataDir = FabricLoader.getInstance().gameDir.resolve(MOD_ID)
     }
 }

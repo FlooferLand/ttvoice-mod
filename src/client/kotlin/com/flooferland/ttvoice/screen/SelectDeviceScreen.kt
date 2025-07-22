@@ -25,6 +25,13 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
         return Vector2Int((width * 0.95).toInt(), 15)
     }
 
+    init {
+        // Speaker init
+        if (MinecraftClient.getInstance().world == null) {
+            SpeechUtil.load()
+        }
+    }
+
     override fun init() {
         val buttonSize = getButtonSize()
 
@@ -98,6 +105,13 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
 
         // Updating
         updateVisibility()
+    }
+
+    override fun removed() {
+        // Speaker uninit
+        if (MinecraftClient.getInstance().world == null) {
+            SpeechUtil.unload()
+        }
     }
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {

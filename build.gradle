@@ -68,7 +68,7 @@ dependencies {
 // Injecting gradle.properties into other files
 // TODO: Get this piece of fucking shit to work,
 //       its 6 fucking AM and I can"t go to bed because I"m dissatisfied I can"t automagically expand shit inside my fabric.mod.fucking.json
-processResources {
+processClientResources {
 	exclude("**/*.lnk")
 
 	Map<String, Object> properties = [
