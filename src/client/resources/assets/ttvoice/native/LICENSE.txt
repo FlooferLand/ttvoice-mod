@@ -1,0 +1,8 @@
+eSpeak NG Text-to-Speech is released under the GPL version 3 or later license (https://github.com/espeak-ng/espeak-ng/blob/master/COPYING)
+The getopt.c compatibility implementation for getopt support on Windows is taken from the NetBSD getopt_long implementation, which is licensed under a 2-clause BSD license.
+
+The eSpeak provided is about the latest available version at the time of the mod's build process
+You can view https://github.com/espeak-ng/espeak-ng for its source code
+
+Using eSpeak does not violate our LGPL3 license due to the wonderful 3.0 changes of the license
+See the compatibility matrix on: https://www.gnu.org/licenses/gpl-faq.html

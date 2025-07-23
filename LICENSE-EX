@@ -1,0 +1,42 @@
+                 "MINECRAFT" LINKING EXCEPTION TO THE LGPL
+
+							    Preamble
+"Minecraft" refers to Mojang's property of the same name,
+which this project links into.
+Minecraft itself is licensed under All Rights Reserved.
+
+"Mod" refers to a modification of the Minecraft source code;
+A mod does not contain Minecraft source code, but is other code that is later
+injected into Minecraft by the user at runtime via a mod loading step (ex: Fabric)
+
+"Fabric" refers to the mod loader that is used by this project.
+
+						   TERMS AND CONDITIONS
+This mod is licensed under LGPL (see the provided LICENSE file)
+Linking this mod statically or dynamically with other modules is making a
+combined work based on this mod. Thus, the terms and conditions of the GNU
+General Public License cover the whole combination.
+
+This mod complies with LGPL however under the plugin clause:
+	(https://www.gnu.org/licenses/gpl-faq.html#GPLPluginsInNF)
+See follow-up comment for further information.
+
+During the linking/injecting of this mod, as a special exception allowed by GPL,
+the copyright holders of this mod give permission to combine this mod with
+free software programs or libraries that are released under the GNU *GPL,
+and with code included in the standard release of Minecraft under
+All Rights Reserved (or modified versions of such code, with unchanged license).
+You may copy and distribute such a system following the terms of the GNU GPL
+for this mod and the licenses of the other code and libraries the project uses.
+A copy of this mod and of Minecraft should never be shared as one, this mod can
+however inject into game at runtime.
+
+The LGPL3 mod and any GPL3 dependencies are compatible, see below:
+	(https://www.gnu.org/licenses/gpl-faq.html)
+
+This mod may or may not be used by being injected into Minecraft,
+but is technically not a Minecraft plugin due to it not using any officially
+provided Minecraft plugin system.
+The mod uses Fabric for linking and injecting, Fabric itself is licensed
+under Apache & MIT (different components use different GPL-compatible licenses).
+For example, the mod uses the Yarn game mappings (Licensed under CC0)

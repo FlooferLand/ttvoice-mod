@@ -154,10 +154,10 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                 .initially(fieldInitialValue as TextToVoiceConfig.TTSBackend)
                                 .build(position.x, position.y, size.x, size.y, labelText)
                                 { b, v ->
-                                    if (v == TextToVoiceConfig.TTSBackend.Native) {
-                                        error = Error("Native TTS backend is not implemented yet")
+                                    if (v == TextToVoiceConfig.TTSBackend.Python) {
+                                        warning = Error("Python TTS backend requires extra setup. Read the mod page")
                                     } else {
-                                        error = null
+                                        warning = null
                                     }
                                     setSetting(field, categoryValue, v)
                                 }

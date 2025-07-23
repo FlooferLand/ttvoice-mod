@@ -61,11 +61,11 @@ public object SpeechUtil : ISpeaker {
 
     fun getBackend(): ISpeaker {
         return when (ModState.config.audio.ttsBackend) {
-            TextToVoiceConfig.TTSBackend.Native -> {
-                NativeSpeaker
-            }
             TextToVoiceConfig.TTSBackend.Python -> {
-                PythonSpeaker
+                EspeakSpeaker
+            }
+            TextToVoiceConfig.TTSBackend.Espeak -> {
+                EspeakSpeaker
             }
         }
     }

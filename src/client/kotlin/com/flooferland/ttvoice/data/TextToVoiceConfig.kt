@@ -16,7 +16,7 @@ data class TextToVoiceConfig(
     )
     data class AudioConfig(
         var device: Int = -1,
-        var ttsBackend: TTSBackend = TTSBackend.Python
+        var ttsBackend: TTSBackend = TTSBackend.Espeak
     )
     data class UiConfig(
         var viewHistory: Boolean = true,
@@ -24,7 +24,7 @@ data class TextToVoiceConfig(
     )
 
     enum class TTSBackend {
-        Native,
+        Espeak,
         Python
     }
 

@@ -63,6 +63,10 @@ dependencies {
 	modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${dev_auth_version}")
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 	implementation "net.java.dev.jna:jna-platform:${jna_version}"
+
+	// Testing
+	testImplementation "net.fabricmc:fabric-loader-junit:${loader_version}"
+	testImplementation "io.kotest:kotest-runner-junit5:${junit_version}"
 }
 
 // Injecting gradle.properties into other files
@@ -93,6 +97,9 @@ processClientResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
 }
 
+kotlin {
+	jvmToolchain(17)
+}
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 17
 }
@@ -107,7 +114,6 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
-
 }
 
 jar {
@@ -135,6 +141,6 @@ publishing {
 		// retrieving dependencies.
 	}
 }
-kotlin {
-	jvmToolchain(17)
+test {
+	useJUnitPlatform()
 }
