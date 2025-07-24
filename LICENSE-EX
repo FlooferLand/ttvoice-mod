@@ -1,4 +1,4 @@
-                 "MINECRAFT" LINKING EXCEPTION TO THE LGPL
+                 "MINECRAFT" LINKING EXCEPTION TO THE GPL
 
 							    Preamble
 "Minecraft" refers to Mojang's property of the same name,
@@ -12,12 +12,12 @@ injected into Minecraft by the user at runtime via a mod loading step (ex: Fabri
 "Fabric" refers to the mod loader that is used by this project.
 
 						   TERMS AND CONDITIONS
-This mod is licensed under LGPL (see the provided LICENSE file)
+This mod is licensed under GPLv3 (see the provided LICENSE file)
 Linking this mod statically or dynamically with other modules is making a
 combined work based on this mod. Thus, the terms and conditions of the GNU
 General Public License cover the whole combination.
 
-This mod complies with LGPL however under the plugin clause:
+This mod complies with GPL however under the plugin clause:
 	(https://www.gnu.org/licenses/gpl-faq.html#GPLPluginsInNF)
 See follow-up comment for further information.
 
@@ -30,9 +30,6 @@ You may copy and distribute such a system following the terms of the GNU GPL
 for this mod and the licenses of the other code and libraries the project uses.
 A copy of this mod and of Minecraft should never be shared as one, this mod can
 however inject into game at runtime.
-
-The LGPL3 mod and any GPL3 dependencies are compatible, see below:
-	(https://www.gnu.org/licenses/gpl-faq.html)
 
 This mod may or may not be used by being injected into Minecraft,
 but is technically not a Minecraft plugin due to it not using any officially

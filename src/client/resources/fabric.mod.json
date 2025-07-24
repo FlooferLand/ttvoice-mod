@@ -9,7 +9,7 @@
 		"homepage": "https://flooferland.com/",
 		"sources": "https://github.com/FlooferLand/ttvoice"
 	},
-	"license": "LGPL3",
+	"license": "GPL-3.0",
 	"icon": "assets/ttvoice/textures/icon.png",
 	"environment": "client",
 	"entrypoints": {
