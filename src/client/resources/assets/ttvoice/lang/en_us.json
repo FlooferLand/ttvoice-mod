@@ -7,8 +7,6 @@
     "config.ttvoice.general": "General",
     "config.ttvoice.general.useSimpleVoiceChat": "Route audio through Simple Voice Chat",
     "config.ttvoice.general.broadcastToAudioMixer": "Route audio through device",
-    "config.ttvoice.general.pythonPath": "Python path",
-    "config.ttvoice.general.pythonPath.tooltip": "For the Python audio backend",
     "config.ttvoice.audio": "Audio",
     "config.ttvoice.audio.device": "Set audio device",
     "config.ttvoice.audio.ttsBackend": "Text-to-speech backend",

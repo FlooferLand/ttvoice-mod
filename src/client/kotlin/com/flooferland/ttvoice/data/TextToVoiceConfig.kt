@@ -25,7 +25,6 @@ data class TextToVoiceConfig(
 
     enum class TTSBackend {
         Espeak,
-        Python
     }
 
     // Scuffed ass methods, but it's the only reliable way to do this
