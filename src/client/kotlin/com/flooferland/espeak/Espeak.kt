@@ -11,7 +11,7 @@ object Espeak {
     private val lib: EspeakLibNative = EspeakLibNative.instance
 
     /** @see EspeakLibNative.espeak_Initialize */
-    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 500, path: String? = null, options: Int = 0): Result<Int> {
+    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 300, path: String? = null, options: Int = 0): Result<Int> {
         val sampleRate = lib.espeak_Initialize(output.int, bufferSize, path, options)
         if (sampleRate == ErrorType.InternalError.int) {
             return Result.Failure(ErrorType.InternalError, "eSpeak initialization encountered an internal error")
@@ -20,10 +20,10 @@ object Espeak {
     }
 
     /** @see EspeakLibNative.espeak_Synth */
-    fun synth(text: String, position: Espeak.Position = Espeak.Position(), flags: UInt = 0u, uniqueId: IntArray? = null, userData: Pointer? = null): Result<Unit> {
+    fun synth(text: String, position: Espeak.Position = Espeak.Position(), flags: Int = CharFlags.Auto.b or Flags.EndPause.b, uniqueId: IntArray? = null, userData: Pointer? = null): Result<Unit> {
         val status = lib.espeak_Synth(
             text, text.toByteArray().size,
-            EspeakLibNative.UnsignedInt(position.start), position.type.int, EspeakLibNative.UnsignedInt(position.end), EspeakLibNative.UnsignedInt(flags),
+            EspeakLibNative.UnsignedInt(position.start), position.type.int, EspeakLibNative.UnsignedInt(position.end), flags,
             uniqueId, userData
         )
         when (status) {
@@ -42,7 +42,10 @@ object Espeak {
         return Result.Success(Unit)
     }
 
-    /** @see EspeakLibNative.espeak_IsPlaying */
+    /**
+     * **NOTE:** This function **never** works for some reason; eSpeak-NG oversight?
+     * @see EspeakLibNative.espeak_IsPlaying
+     */
     fun isPlaying(): Boolean {
         return lib.espeak_IsPlaying() == 1
     }
@@ -57,13 +60,9 @@ object Espeak {
     }
 
     /** Check the "see" section for the callback
-     * @see EspeakLibNative.EspeakSynthCallback.callback */
-    fun setSynthCallback(callback: (waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?) -> Int) {
-        lib.espeak_SetSynthCallback(object : EspeakLibNative.EspeakSynthCallback {
-            override fun callback(waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?): Int {
-                return callback.invoke(waveData, numberOfSamples, events, userData)
-            }
-        })
+     * @see EspeakLibNative.SynthCallback.callback */
+    fun setSynthCallback(callback: (wav: Pointer?, numSamples: Int, events: Pointer?) -> Int) {
+        lib.espeak_SetSynthCallback(callback)
     }
 
     /** Get the version number */
@@ -89,8 +88,21 @@ object Espeak {
         val int: Int
             get() = ordinal + 1
     }
+    enum class CharFlags(val b: Int) {
+        Auto(0),
+        Utf8(1),
+        Bit8(2),
+        Wchar(3),
+        Bit16(4);
+    }
+    enum class Flags(val b: Int) {
+        SSML(0x10),
+        Phonemes(0x100),
+        EndPause(0x1000),
+        KeepNameData(0x2000),
+    }
     enum class AudioOutput {
-        /** PLAYBACK mode: plays the audio data, supplies events to the calling program*/
+        /** PLAYBACK mode: plays the audio data, supplies events to the calling program, and blocks the thread */
         Playback,
 
         /** RETRIEVAL mode: supplies audio data and events to the calling program */

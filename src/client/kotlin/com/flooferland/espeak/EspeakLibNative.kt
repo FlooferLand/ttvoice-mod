@@ -88,7 +88,7 @@ interface EspeakLibNative : Library {
         position: UnsignedInt,
         position_type: Int,
         end_position: UnsignedInt,
-        flags: UnsignedInt,
+        flags: Int,
         unique_identifier: IntArray?,
         user_data: Pointer?
     ): Int
@@ -114,7 +114,7 @@ interface EspeakLibNative : Library {
      *  The callback function is of the form:
      *     int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
     */
-    fun espeak_SetSynthCallback(SynthCallback: EspeakSynthCallback)
+    fun espeak_SetSynthCallback(SynthCallback: SynthCallback)
 
     /** Returns the version number string.
      *  @param pathData The path to espeak_data
@@ -122,12 +122,12 @@ interface EspeakLibNative : Library {
     fun espeak_Info(pathData: Pointer? = null): String?
 
     // Espeak types
-    interface EspeakSynthCallback : Callback {
-        /* int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
+    fun interface SynthCallback : Callback {
+        /** int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
          *   @param wav is the speech sound data which has been produced.
          *     NULL indicates that the synthesis has been completed.
          *
-         *   @param numsamples is the number of entries in wav.  This number may vary, may be less than
+         *   @param numSamples is the number of entries in wav.  This number may vary, may be less than
          *     the value implied by the buflength parameter given in espeak_Initialize, and may
          *     sometimes be zero (which does NOT indicate end of synthesis).
          *
@@ -135,10 +135,9 @@ interface EspeakLibNative : Library {
          *     also the occurrence if <mark> and <audio> elements within the text.  The list of
          *     events is terminated by an event of type = 0.
          *
-         *
          *  @returns: 0=continue synthesis, 1=abort synthesis.
          */
-        fun callback(waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?): Int
+        fun callback(wav: Pointer?, numSamples: Int, events: Pointer?): Int
     }
 
     // Custom types for JNA

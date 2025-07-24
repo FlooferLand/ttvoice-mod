@@ -33,7 +33,7 @@ class EspeakSpeaker : ISpeaker {
         // Adding the callback so I can get the data
         // TODO: Look into streaming the data into SVC directly from the callback
         val buffers = mutableListOf<ByteArray>()
-        Espeak.setSynthCallback() { waveData, numberOfSamples, events, userData ->
+        Espeak.setSynthCallback() { waveData, numberOfSamples, events ->
             if (waveData != null && numberOfSamples > 0) {
                 val bytes = waveData.getByteArray(0, numberOfSamples * 2)
                 buffers.add(bytes)
