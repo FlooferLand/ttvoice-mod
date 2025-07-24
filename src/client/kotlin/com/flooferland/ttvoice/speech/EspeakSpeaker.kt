@@ -1,6 +1,7 @@
 package com.flooferland.ttvoice.speech
 
 import com.flooferland.espeak.Espeak
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.util.Extensions.resampleRate
@@ -8,12 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.Clip
 import javax.sound.sampled.DataLine
 import javax.sound.sampled.SourceDataLine
 
@@ -22,6 +21,7 @@ class EspeakSpeaker : ISpeaker {
 
     override fun load(context: ISpeaker.WorldContext?) {
         Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
+        LOGGER.info("Initialized eSpeak-NG v${Espeak.getVersion()}")
         this.context = context
     }
 

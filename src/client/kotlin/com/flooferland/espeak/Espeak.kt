@@ -66,6 +66,12 @@ object Espeak {
         })
     }
 
+    /** Get the version number */
+    fun getVersion(): String {
+        val version = lib.espeak_Info() ?: "Unknown"
+        return version
+    }
+
     // Custom types
     data class Position(val type: PositionType = PositionType.Word, val start: UInt = 0u, val end: UInt = 0u)
     sealed interface Result<out V> {

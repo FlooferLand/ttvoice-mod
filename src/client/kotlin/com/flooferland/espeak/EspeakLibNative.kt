@@ -116,6 +116,11 @@ interface EspeakLibNative : Library {
     */
     fun espeak_SetSynthCallback(SynthCallback: EspeakSynthCallback)
 
+    /** Returns the version number string.
+     *  @param pathData The path to espeak_data
+     */
+    fun espeak_Info(pathData: Pointer? = null): String?
+
     // Espeak types
     interface EspeakSynthCallback : Callback {
         /* int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
