@@ -8,6 +8,18 @@ import de.maxhenkel.voicechat.api.events.EventRegistration
 import net.minecraft.client.MinecraftClient
 
 class VcPlugin : VoicechatPlugin {
+    companion object {
+        var api: VoicechatClientApi? = null
+        var channel: ClientAudioChannel? = null
+
+        val modName: String
+            get() = "Simple Voice Chat"
+        val muted: Boolean
+            get() = api?.isMuted ?: false
+        val connected: Boolean
+            get() = api?.let { !it.isDisabled && !it.isDisconnected } ?: false
+    }
+
     override fun getPluginId(): String? {
         return TextToVoiceClient.MOD_ID
     }
@@ -19,13 +31,8 @@ class VcPlugin : VoicechatPlugin {
         }
         registration.registerEvent(ClientVoicechatConnectionEvent::class.java, { packet ->
             api = packet.voicechat
-            channel = api.createStaticAudioChannel(MinecraftClient.getInstance().player!!.uuid)
-            //channel = api.createEntityAudioChannel(UUID(), api.fromEntity(MinecraftClient.getInstance().player))
+            channel = api!!.createStaticAudioChannel(MinecraftClient.getInstance().player!!.uuid)
+            //channel = api!!.createEntityAudioChannel(UUID(), api.fromEntity(MinecraftClient.getInstance().player))
         }, 10)
-    }
-
-    companion object {
-        lateinit var api: VoicechatClientApi
-        lateinit var channel: ClientAudioChannel
     }
 }

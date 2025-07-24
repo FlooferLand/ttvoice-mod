@@ -28,7 +28,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
     init {
         // Speaker init
         if (MinecraftClient.getInstance().world == null) {
-            SpeechUtil.load()
+            SpeechUtil.load(null)
         }
     }
 

@@ -3,10 +3,7 @@
 package com.flooferland.espeak
 
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
-import com.sun.jna.IntegerType
-import com.sun.jna.Library
-import com.sun.jna.Native
-import com.sun.jna.Pointer
+import com.sun.jna.*
 
 /**
  * Manually (and very painfully) written native Kotlin bindings for libespeak <br/>
@@ -105,10 +102,39 @@ interface EspeakLibNative : Library {
     fun espeak_IsPlaying(): Int
 
     /** last function to be called.
-     *  Return: EE_OK: operation achieved
+     *  @return EE_OK: operation achieved
      *      EE_INTERNAL_ERROR.
     */
     fun espeak_Terminate(): Int
+
+    /** Must be called before any synthesis functions are called.
+     *  This specifies a function in the calling program which is called when a buffer of
+     *  speech sound data has been produced.
+     *
+     *  The callback function is of the form:
+     *     int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
+    */
+    fun espeak_SetSynthCallback(SynthCallback: EspeakSynthCallback)
+
+    // Espeak types
+    interface EspeakSynthCallback : Callback {
+        /* int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);
+         *   @param wav is the speech sound data which has been produced.
+         *     NULL indicates that the synthesis has been completed.
+         *
+         *   @param numsamples is the number of entries in wav.  This number may vary, may be less than
+         *     the value implied by the buflength parameter given in espeak_Initialize, and may
+         *     sometimes be zero (which does NOT indicate end of synthesis).
+         *
+         *  @param events is an array of espeak_EVENT items which indicate word and sentence events, and
+         *     also the occurrence if <mark> and <audio> elements within the text.  The list of
+         *     events is terminated by an event of type = 0.
+         *
+         *
+         *  @returns: 0=continue synthesis, 1=abort synthesis.
+         */
+        fun callback(waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?): Int
+    }
 
     // Custom types for JNA
     class UnsignedInt: IntegerType {

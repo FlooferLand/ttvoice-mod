@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.screen.widgets
 
+import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.registry.ModCommands
 import com.flooferland.ttvoice.screen.SelectDeviceScreen
@@ -27,9 +28,11 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         val player = MinecraftClient.getInstance().player
         if (player == null) return
 
-        val devices = AudioSystem.getMixerInfo()
-        if (ModState.config.audio.device < devices.size) {
-            MinecraftClient.getInstance().setScreen(SelectDeviceScreen(screen))
+        if (ModState.config.general.routeThroughDevice) {
+            val devices = AudioSystem.getMixerInfo()
+            if (ModState.config.audio.device < devices.size) {
+                MinecraftClient.getInstance().setScreen(SelectDeviceScreen(screen))
+            }
         }
     }
 
@@ -42,16 +45,25 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
 
     fun update() {
         val devices = AudioSystem.getMixerInfo()
-        var text: MutableText = Text.literal("No messages")
-        if (ModState.config.audio.device < devices.size) {
-            text = Text.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}")
+        var text: MutableText = Text.empty()
+
+        if (ModState.config.general.routeThroughDevice) {
+            text.append(Text.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}"))
             tooltip = Tooltip.of(Text.of("Click to change the device"))
         }
+        if (ModState.config.general.routeThroughVoiceChat) {
+            val connected = (if (VcPlugin.connected) "connected" else "disconnected")
+            if (!text.string.isEmpty()) text.append("\n")
+            text.append(Text.translatable("status.ttvoice.vc.$connected", VcPlugin.modName))
+        }
+
+        // Overrides
         if (screen.error?.message != null) {
             text = Text.literal(screen.error!!.message!!)
                 .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_RED))
             tooltip = Tooltip.of(Text.of("Error"))
         }
+
         message = text
     }
 

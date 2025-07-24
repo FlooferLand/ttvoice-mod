@@ -4,39 +4,49 @@ import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import javax.sound.sampled.AudioSystem
+import com.flooferland.ttvoice.speech.ISpeaker.Status
+import com.flooferland.ttvoice.speech.ISpeaker.StatusType
+import org.jetbrains.annotations.CheckReturnValue
 
 public object SpeechUtil : ISpeaker {
-    override fun speak(text: String) {
+    override fun load(context: ISpeaker.WorldContext?) {
+        getBackend().load(context)
+    }
+
+    override fun unload() {
+        getBackend().unload()
+    }
+
+    @CheckReturnValue
+    override fun speak(text: String): Status {
         // Mixer parsing
-        var selectedMixer = -1
-        val allMixers = AudioSystem.getMixerInfo()
-        for (i in allMixers.indices) {
-            if (i == ModState.config.audio.device) {
-                selectedMixer = i
-                break
+        if (ModState.config.general.routeThroughDevice) {
+            var selectedMixer = -1
+            val allMixers = AudioSystem.getMixerInfo()
+            for (i in allMixers.indices) {
+                if (i == ModState.config.audio.device) {
+                    selectedMixer = i
+                    break
+                }
             }
-        }
-        if (selectedMixer == -1) {
-            error("Selected mixer doesn't exist")
+            if (selectedMixer == -1) {
+                return Status.Failure(StatusType.NoOutputDevice, "Selected mixer doesn't exist")
+            }
         }
 
-        if (ModState.config.general.useSimpleVoiceChat) {
-            if (VcPlugin.api.isMuted) {
-                error("Can't play audio while muted")
-            }
-            if (VcPlugin.api.isDisconnected || VcPlugin.api.isDisabled) {
-                error("Can't play audio while voice chat is disconnected or disabled")
-            }
+        // Voice chat
+        if (ModState.config.general.routeThroughVoiceChat) {
+            if (VcPlugin.muted)
+                return Status.Failure(StatusType.VoiceMuted, "Can't play audio while muted")
+            if (!VcPlugin.connected)
+                return Status.Failure(StatusType.VoiceDisconnected, "Can't play audio while voice chat is disconnected or disabled")
         }
 
         // Generating the TTS audio and playing it
-        val speaker: ISpeaker = getBackend()
-        val result = runCatching {
-            speaker.speak(text)
-        };
-        result.onFailure { err ->
-            error(err.message.toString())
-        }
+        val result = runCatching { getBackend().speak(text) };
+        result.onFailure { err -> return Status.Failure(StatusType.Internal, err.message.toString()) }
+        result.onSuccess { info -> return Status.Success() }
+        return Status.Failure(StatusType.Internal, "Unknown; Did not succeed")
     }
 
     override fun shutUp() {
@@ -51,19 +61,9 @@ public object SpeechUtil : ISpeaker {
         return getBackend().isSpeaking()
     }
 
-    override fun load() {
-        getBackend().load()
-    }
-
-    override fun unload() {
-        getBackend().unload()
-    }
-
     fun getBackend(): ISpeaker {
         return when (ModState.config.audio.ttsBackend) {
-            TextToVoiceConfig.TTSBackend.Espeak -> {
-                EspeakSpeaker
-            }
+            TextToVoiceConfig.TTSBackend.Espeak -> EspeakSpeaker()
         }
     }
 }

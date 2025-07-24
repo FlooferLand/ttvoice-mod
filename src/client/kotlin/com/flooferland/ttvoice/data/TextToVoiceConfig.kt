@@ -10,9 +10,8 @@ data class TextToVoiceConfig(
 ) {
     // Types
     data class GeneralConfig(
-        var useSimpleVoiceChat: Boolean = true,
-        var broadcastToAudioMixer: Boolean = true,
-        var pythonPath: String = "C:/Users/FlooferLand/AppData/Local/Programs/Python/Python313/python.exe"
+        var routeThroughVoiceChat: Boolean = true,
+        var routeThroughDevice: Boolean = false
     )
     data class AudioConfig(
         var device: Int = -1,
@@ -24,7 +23,7 @@ data class TextToVoiceConfig(
     )
 
     enum class TTSBackend {
-        Espeak,
+        Espeak
     }
 
     // Scuffed ass methods, but it's the only reliable way to do this

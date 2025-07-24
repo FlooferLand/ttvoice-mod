@@ -11,8 +11,8 @@ object Espeak {
     private val lib: EspeakLibNative = EspeakLibNative.instance
 
     /** @see EspeakLibNative.espeak_Initialize */
-    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferLength: Int = 500, path: String? = null, options: Int = 0): Result<Int> {
-        val sampleRate = lib.espeak_Initialize(output.int, bufferLength, path, options)
+    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 500, path: String? = null, options: Int = 0): Result<Int> {
+        val sampleRate = lib.espeak_Initialize(output.int, bufferSize, path, options)
         if (sampleRate == ErrorType.InternalError.int) {
             return Result.Failure(ErrorType.InternalError, "eSpeak initialization encountered an internal error")
         }
@@ -54,6 +54,16 @@ object Espeak {
             return Result.Failure(ErrorType.InternalError, "eSpeak failed to terminate")
         }
         return Result.Success(Unit)
+    }
+
+    /** Check the "see" section for the callback
+     * @see EspeakLibNative.EspeakSynthCallback.callback */
+    fun setSynthCallback(callback: (waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?) -> Int) {
+        lib.espeak_SetSynthCallback(object : EspeakLibNative.EspeakSynthCallback {
+            override fun callback(waveData: Pointer?, numberOfSamples: Int, events: Pointer?, userData: Pointer?): Int {
+                return callback.invoke(waveData, numberOfSamples, events, userData)
+            }
+        })
     }
 
     // Custom types
