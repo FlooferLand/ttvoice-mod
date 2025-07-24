@@ -9,15 +9,7 @@ class EspeakLibTest : FunSpec({
 
     test("initial") {
         val result = Espeak.initialize()
-        when (result) {
-            is Espeak.Result.Success<Int> -> {
-                assertTrue(result.data == EspeakSpeaker.INPUT_SAMPLERATE, "${result.data} == ${EspeakSpeaker.INPUT_SAMPLERATE}")
-            }
-            is Espeak.Result.Failure -> {
-                fail("Could not initialize")
-            }
-            else -> {}
-        }
+        result.onSuccess { sampleRate -> assertEquals(sampleRate, EspeakSpeaker.INPUT_SAMPLERATE) }
         Espeak.terminate()
     }
 

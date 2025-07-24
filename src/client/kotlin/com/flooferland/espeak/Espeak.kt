@@ -14,32 +14,31 @@ object Espeak {
     fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 300, path: String? = null, options: Int = 0): Result<Int> {
         val sampleRate = lib.espeak_Initialize(output.int, bufferSize, path, options)
         if (sampleRate == ErrorType.InternalError.int) {
-            return Result.Failure(ErrorType.InternalError, "eSpeak initialization encountered an internal error")
+            return Result.failure(Error("eSpeak initialization encountered an internal error"))
         }
-        return Result.Success(sampleRate)
+        return Result.success(sampleRate)
     }
 
     /** @see EspeakLibNative.espeak_Synth */
-    fun synth(text: String, position: Espeak.Position = Espeak.Position(), flags: Int = CharFlags.Auto.b or Flags.EndPause.b, uniqueId: IntArray? = null, userData: Pointer? = null): Result<Unit> {
+    fun synth(text: String, position: Espeak.Position = Espeak.Position(), flags: Int = CharFlags.Auto.b or Flags.EndPause.b, uniqueId: IntArray? = null, userData: Pointer? = null): Error? {
         val status = lib.espeak_Synth(
             text, text.toByteArray().size,
             EspeakLibNative.UnsignedInt(position.start), position.type.int, EspeakLibNative.UnsignedInt(position.end), flags,
             uniqueId, userData
         )
-        when (status) {
-            ErrorType.ok -> Result.EmptySuccess()
-            ErrorType.BufferFull.int -> Result.Failure(ErrorType.BufferFull, "The command can not be buffered; You may try after a while to call the function again")
+        return when (status) {
+            ErrorType.BufferFull.int -> Error("The command can not be buffered; You may try after a while to call the function again")
+            else -> null
         }
-        return Result.Failure(ErrorType.InternalError, "Internal error during synthesis")
     }
 
     /** @see EspeakLibNative.espeak_Cancel */
-    fun cancel(): Result<Unit> {
+    fun cancel(): Error? {
         val status = lib.espeak_Cancel()
         if (status == ErrorType.InternalError.int) {
-            return Result.Failure(ErrorType.InternalError, "eSpeak failed to cancel current playback")
+            return Error("eSpeak failed to cancel current playback")
         }
-        return Result.Success(Unit)
+        return null
     }
 
     /**
@@ -51,12 +50,12 @@ object Espeak {
     }
 
     /** @see EspeakLibNative.espeak_Terminate */
-    fun terminate(): Result<Unit> {
+    fun terminate(): Error? {
         val status = lib.espeak_Terminate()
         if (status == ErrorType.InternalError.int) {
-            return Result.Failure(ErrorType.InternalError, "eSpeak failed to terminate")
+            return Error("eSpeak failed to terminate")
         }
-        return Result.Success(Unit)
+        return null
     }
 
     /** Check the "see" section for the callback
@@ -73,11 +72,6 @@ object Espeak {
 
     // Custom types
     data class Position(val type: PositionType = PositionType.Word, val start: UInt = 0u, val end: UInt = 0u)
-    sealed interface Result<out V> {
-        data class Success<out V>(val data: V) : Result<V>
-        data class Failure(val error: ErrorType, val context: String? = null) : Result<Nothing>
-        class EmptySuccess : Result<Unit>
-    }
 
     // Built-in types
     enum class PositionType {
