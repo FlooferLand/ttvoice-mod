@@ -163,7 +163,7 @@ interface EspeakLibNative : Library {
     // Loaded native instance :3
     companion object {
         // Loading the library
-        init { System.setProperty("jna.library.path", "src/main/resources/assets/$MOD_ID/native") }
+        init { System.setProperty("jna.library.path", "src/main/resources/native") }
         val instance: EspeakLibNative = Native.load("libespeak-ng", EspeakLibNative::class.java)
 
         // Other thingies
