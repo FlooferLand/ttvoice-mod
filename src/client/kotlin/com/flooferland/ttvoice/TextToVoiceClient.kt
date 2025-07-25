@@ -4,7 +4,6 @@ import com.flooferland.ttvoice.registry.ModCommands
 import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.registry.ModEvents
 import com.flooferland.ttvoice.registry.ModKeybinds
-import com.flooferland.ttvoice.registry.ModResources
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.loader.api.FabricLoader
 import org.slf4j.Logger
@@ -20,7 +19,6 @@ class TextToVoiceClient : ClientModInitializer {
         ModConfig.loadOrDefault()
 
         // Registering other things
-        ModResources.registerReloaders()
         ModKeybinds.registerKeybinds()
         ModEvents.registerEvents()
         ModCommands.registerCommands()
