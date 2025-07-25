@@ -8,14 +8,14 @@ import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.util.Extensions.resampleRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.sound.SoundManager
 import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
@@ -25,7 +25,12 @@ import javax.sound.sampled.Mixer
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
-    val isPlaying = AtomicBoolean(false)
+    var speakerJob: Job? = null
+    var runningSpeakerJob = false
+        set(value) {
+            field = value
+            println("runningSpeakerJob = $value")
+        }
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
         val result = Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
@@ -44,6 +49,8 @@ class EspeakSpeaker : ISpeaker {
     }
 
     override fun speak(text: String): Status {
+        speakerJob?.cancel()
+
         // Adding the callback so I can get the data
         // TODO: Look into streaming the data into SVC directly from the callback
         val buffers = mutableListOf<ByteArray>()
@@ -55,7 +62,6 @@ class EspeakSpeaker : ISpeaker {
             return@setSynthCallback 0
         }
         Espeak.synth(text)
-        isPlaying.set(true)
 
         // Combining the output data, now that we got it
         val bytes = buffers.fold(ByteArray(0)) { acc, chunk -> acc + chunk }
@@ -70,49 +76,63 @@ class EspeakSpeaker : ISpeaker {
         // TODO: Look into compiling eSpeak myself and changing its sample rate to skip this step
         val pcm = rawPcm.resampleRate(sampleRate, OUTPUT_SAMPLERATE)
 
-        // Playing locally on the client
-        if (ModState.config.general.hearSelf) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val caught = runCatching { playToDevice(pcm) }
-                caught.onFailure { err ->
-                    LOGGER.error(err.message, err.cause)
-                }
-            }
-        }
+        // Parent speaker task (required to tell when speaking or not)
+        speakerJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            val children = mutableListOf<Job>()
 
-        // Playing through Voicemeeter / external
-        if (ModState.config.general.routeThroughDevice) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val device = AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
-                val caught = runCatching { playToDevice(pcm, device) }
-                caught.onFailure { err ->
-                    LOGGER.error(err.message, err.cause)
-                }
-            }
-        }
-
-        // Streaming the data to Simple Voice Chat
-        if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val chunks = pcm.asSequence().chunked(FRAME_SAMPLES)
-                chunks.forEach { frame ->
-                    VcPlugin.channel?.play(frame.toShortArray())
-                    delay(FRAME_MS.toLong())
-                    if (!chunks.iterator().hasNext()) {
-                        isPlaying.set(false)
+            // Playing locally on the client
+            if (ModState.config.general.hearSelf) {
+                children += CoroutineScope(Dispatchers.IO).launch {
+                    val caught = runCatching {
+                        playToDevice(pcm)
+                    }
+                    caught.onFailure { err ->
+                        LOGGER.error(err.message, err.cause)
                     }
                 }
             }
+
+            // Playing through Voicemeeter / external
+            if (ModState.config.general.routeThroughDevice) {
+                children += CoroutineScope(Dispatchers.IO).launch {
+                    val device = AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
+                    val caught = runCatching {
+                        playToDevice(pcm, device)
+                    }
+                    caught.onFailure { err ->
+                        LOGGER.error(err.message, err.cause)
+                    }
+                }
+            }
+
+            // Streaming the data to Simple Voice Chat
+            if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected) {
+                children += CoroutineScope(Dispatchers.IO).launch {
+                    val chunks = pcm.asSequence().chunked(FRAME_SAMPLES).toList()
+                    chunks.forEachIndexed { i, frame ->
+                        VcPlugin.channel?.play(frame.toShortArray())
+                        delay(FRAME_MS.toLong())
+                    }
+                }
+            }
+
+            // Waiting for all yapping tasks to finish
+            runningSpeakerJob = true
+            children.joinAll()
+            runningSpeakerJob = false
         }
+
         return Status.Success()
     }
 
     override fun shutUp() {
         Espeak.cancel()
+        speakerJob?.cancel()
+        runningSpeakerJob = false
     }
 
     override fun isSpeaking(): Boolean {
-        return isPlaying.get()
+        return runningSpeakerJob
     }
 
     suspend fun playToDevice(pcm: ShortArray, device: Mixer.Info? = null) {

@@ -1,11 +1,12 @@
 {
-	"required": true,
-	"package": "com.flooferland.ttvoice.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"client": [
-
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+    "required": true,
+    "package": "com.flooferland.ttvoice.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "mixins": [
+        "RenderEventsAccessor",
+        "SVCSpeakingVisualMixin"
+    ]
 }

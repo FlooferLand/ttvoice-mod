@@ -10,20 +10,20 @@ import org.jetbrains.annotations.CheckReturnValue
 import java.lang.Error
 
 public object SpeechUtil : ISpeaker {
-    var loaded = false
+    private var loaded: ISpeaker? = null
 
     override fun load(context: ISpeaker.WorldContext?): Result<ISpeaker> {
-        val speaker = getBackend().load(context)
+        val speaker = spawnBackend().load(context)
         speaker.onSuccess {
-            loaded = true
+            loaded = speaker.getOrNull()!!
             return Result.success(it)
         }
         speaker.onFailure { err ->
             // TODO: Switch backends if one doesn't work
-            loaded = false
+            loaded = null
             return Result.failure(err)
         }
-        loaded = false
+        loaded = null
         return Result.failure(Error("Speaker not found"))
     }
 
@@ -34,7 +34,7 @@ public object SpeechUtil : ISpeaker {
     @CheckReturnValue
     override fun speak(text: String): Status {
         // Not loaded
-        if (!loaded) {
+        if (loaded == null) {
             return Status.Failure(StatusType.Internal, "Uninitialized")
         }
 
@@ -69,22 +69,29 @@ public object SpeechUtil : ISpeaker {
     }
 
     override fun shutUp() {
-        if (loaded) {
-            getBackend().shutUp()
-        }
+        loaded?.shutUp()
     }
 
     override fun playTest() {
-        if (loaded) {
-            getBackend().playTest()
-        }
+        loaded?.playTest()
     }
 
     override fun isSpeaking(): Boolean {
-        return if (loaded) getBackend().isSpeaking() else false
+        return loaded?.isSpeaking() ?: false
     }
 
     fun getBackend(): ISpeaker {
+        if (loaded == null) {
+            loaded = spawnBackend()
+        }
+        return loaded!!
+    }
+
+    private fun spawnBackend(): ISpeaker {
+        if (loaded != null) {
+            loaded!!.unload()
+            loaded = null
+        }
         return when (ModState.config.audio.ttsBackend) {
             TextToVoiceConfig.TTSBackend.Espeak -> EspeakSpeaker()
         }
