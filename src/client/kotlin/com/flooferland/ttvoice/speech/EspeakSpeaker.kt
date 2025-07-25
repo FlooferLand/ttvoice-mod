@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
@@ -18,11 +19,18 @@ import javax.sound.sampled.SourceDataLine
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
+    val isPlaying = AtomicBoolean(false)
 
-    override fun load(context: ISpeaker.WorldContext?) {
-        Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
-        LOGGER.info("Initialized eSpeak-NG v${Espeak.getVersion()}")
-        this.context = context
+    override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
+        val result = Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
+        if (result.isSuccess) {
+            LOGGER.info("Initialized eSpeak-NG v${Espeak.getVersion()}")
+            this.context = context
+            EspeakSpeaker.sampleRate = result.getOrNull()!!
+            return Result.success(this)
+        } else {
+            return Result.failure(Error("Error initializing eSpeak-NG v${Espeak.getVersion()}"))
+        }
     }
 
     override fun unload() {
@@ -41,6 +49,7 @@ class EspeakSpeaker : ISpeaker {
             return@setSynthCallback 0
         }
         Espeak.synth(text)
+        isPlaying.set(true)
 
         // Combining the output data, now that we got it
         val bytes = buffers.fold(ByteArray(0)) { acc, chunk -> acc + chunk }
@@ -53,7 +62,7 @@ class EspeakSpeaker : ISpeaker {
 
         // Resampling because eSpeak has a silly default sample rate
         // TODO: Look into compiling eSpeak myself and changing its sample rate to skip this step
-        val pcm = rawPcm.resampleRate(INPUT_SAMPLERATE, OUTPUT_SAMPLERATE)
+        val pcm = rawPcm.resampleRate(Companion.sampleRate, OUTPUT_SAMPLERATE)
 
         // Playing locally on the client
         // TODO: Figure out why this isn't working
@@ -78,12 +87,14 @@ class EspeakSpeaker : ISpeaker {
 
         // Streaming the data to Simple Voice Chat
         CoroutineScope(Dispatchers.IO).launch {
-            pcm.asSequence()
-                .chunked(FRAME_SAMPLES)
-                .forEach { frame ->
-                    VcPlugin.channel?.play(frame.toShortArray())
-                    delay(FRAME_MS.toLong())
+            val chunks = pcm.asSequence().chunked(FRAME_SAMPLES)
+            chunks.forEach { frame ->
+                VcPlugin.channel?.play(frame.toShortArray())
+                delay(FRAME_MS.toLong())
+                if (!chunks.iterator().hasNext()) {
+                    isPlaying.set(false)
                 }
+            }
         }
         return Status.Success()
     }
@@ -93,14 +104,14 @@ class EspeakSpeaker : ISpeaker {
     }
 
     override fun isSpeaking(): Boolean {
-        return Espeak.isPlaying()
+        return isPlaying.get()
     }
 
     companion object {
-        const val INPUT_SAMPLERATE = 25_050
         const val OUTPUT_SAMPLERATE = 48_000
         const val FRAME_MS = 20
         const val FRAME_SAMPLES = (OUTPUT_SAMPLERATE * FRAME_MS) / 1_000
         const val BUFFER_SIZE = FRAME_MS * 3 // frames
+        var sampleRate = -1 // filled by eSpeak
     }
 }

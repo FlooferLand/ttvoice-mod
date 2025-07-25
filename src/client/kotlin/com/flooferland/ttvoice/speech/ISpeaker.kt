@@ -34,7 +34,9 @@ interface ISpeaker {
     }
 
     /** Called when the client loads into a world, or the settings screen */
-    public fun load(context: WorldContext?) {}
+    public fun load(context: WorldContext?): Result<ISpeaker> {
+        return Result.success(this);
+    }
 
     /** Called when unloading from a world */
     public fun unload() {}

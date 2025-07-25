@@ -1,15 +1,15 @@
 package com.flooferland.espeak
 
-import com.flooferland.ttvoice.speech.EspeakSpeaker
 import io.kotest.core.spec.style.FunSpec
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 
 class EspeakLibTest : FunSpec({
     val expectedChunks = 11
 
     test("initial") {
         val result = Espeak.initialize()
-        result.onSuccess { sampleRate -> assertEquals(sampleRate, EspeakSpeaker.INPUT_SAMPLERATE) }
+        assertTrue((result.getOrNull() ?: -1) > 1)
         Espeak.terminate()
     }
 
