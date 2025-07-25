@@ -24,12 +24,10 @@ public class SVCSpeakingVisualMixin {
 		boolean hideIcons = api.getClientConfig().getBoolean("hideIcons", false);
 
 		var accessor = ((RenderEventsAccessor) (Object) this);
-		System.out.println(SpeechUtil.INSTANCE.isSpeaking());
-		if (SpeechUtil.INSTANCE.isSpeaking()) {
-			accessor.callRenderIcon(guiGraphics, RenderEventsAccessor.getSpeakerIcon());
-		}
 		if (accessor.callShouldShowIcons() && hideIcons != true && VcPlugin.Companion.getConnected() && !VcPlugin.Companion.getMuted()) {
-
+			if (SpeechUtil.INSTANCE.isSpeaking()) {
+				accessor.callRenderIcon(guiGraphics, RenderEventsAccessor.getSpeakerIcon());
+			}
 		}
 	}
 }

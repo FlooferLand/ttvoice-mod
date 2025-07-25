@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -23,14 +24,13 @@ import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.Clip
 import javax.sound.sampled.Mixer
 
+// TODO: Unify things more. Make the buffer that gets sent to SVC play at about the same time as the buffer that gets sent to the client device.
+//       Right now there are some delays/inconsistencies between what the other players hear and what the player hear
+
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
     var speakerJob: Job? = null
     var runningSpeakerJob = false
-        set(value) {
-            field = value
-            println("runningSpeakerJob = $value")
-        }
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
         val result = Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
@@ -110,6 +110,7 @@ class EspeakSpeaker : ISpeaker {
                 children += CoroutineScope(Dispatchers.IO).launch {
                     val chunks = pcm.asSequence().chunked(FRAME_SAMPLES).toList()
                     chunks.forEachIndexed { i, frame ->
+                        if (!isSpeaking()) return@forEachIndexed
                         VcPlugin.channel?.play(frame.toShortArray())
                         delay(FRAME_MS.toLong())
                     }
@@ -121,12 +122,16 @@ class EspeakSpeaker : ISpeaker {
             children.joinAll()
             runningSpeakerJob = false
         }
+        speakerJob?.invokeOnCompletion {
+            runningSpeakerJob = false
+        }
 
         return Status.Success()
     }
 
     override fun shutUp() {
         Espeak.cancel()
+        speakerJob?.cancelChildren()
         speakerJob?.cancel()
         runningSpeakerJob = false
     }
@@ -161,7 +166,11 @@ class EspeakSpeaker : ISpeaker {
         val converted = AudioSystem.getAudioInputStream(target, stream)
         clip.open(converted)
         clip.start()
-        delay((clip.microsecondLength / 1000) + 50)
+        delay(FRAME_MS.toLong())
+        while (true) {
+            if (clip.isRunning && isSpeaking()) break
+            delay(FRAME_MS.toLong())
+        }
         clip.close()
         stream.close()
     }
