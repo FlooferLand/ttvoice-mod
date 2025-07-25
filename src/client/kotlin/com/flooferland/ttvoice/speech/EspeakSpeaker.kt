@@ -3,19 +3,25 @@ package com.flooferland.ttvoice.speech
 import com.flooferland.espeak.Espeak
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.VcPlugin
+import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.util.Extensions.resampleRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.sound.SoundManager
+import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
-import javax.sound.sampled.SourceDataLine
+import javax.sound.sampled.AudioInputStream
+import javax.sound.sampled.Clip
+import javax.sound.sampled.Mixer
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
@@ -62,37 +68,39 @@ class EspeakSpeaker : ISpeaker {
 
         // Resampling because eSpeak has a silly default sample rate
         // TODO: Look into compiling eSpeak myself and changing its sample rate to skip this step
-        val pcm = rawPcm.resampleRate(Companion.sampleRate, OUTPUT_SAMPLERATE)
+        val pcm = rawPcm.resampleRate(sampleRate, OUTPUT_SAMPLERATE)
 
         // Playing locally on the client
-        // TODO: Figure out why this isn't working
-        CoroutineScope(Dispatchers.Main).launch {
-            val buffer = ByteBuffer.allocate(pcm.size * Short.SIZE_BYTES)
-                .order(ByteOrder.LITTLE_ENDIAN)
-            pcm.forEach { buffer.putShort(it) }
+        if (ModState.config.general.hearSelf) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val caught = runCatching { playToDevice(pcm) }
+                caught.onFailure { err ->
+                    LOGGER.error(err.message, err.cause)
+                }
+            }
+        }
 
-            val format = AudioFormat(
-                OUTPUT_SAMPLERATE.toFloat(), 16, 1,
-                true, false
-            )
-            val info = DataLine.Info(SourceDataLine::class.java, format)
-            val line = AudioSystem.getLine(info) as SourceDataLine
-            line.open(format)
-            line.start()
-            line.write(bytes, 0, buffer.array().size)
-            line.drain()
-            line.stop()
-            line.close()
+        // Playing through Voicemeeter / external
+        if (ModState.config.general.routeThroughDevice) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val device = AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
+                val caught = runCatching { playToDevice(pcm, device) }
+                caught.onFailure { err ->
+                    LOGGER.error(err.message, err.cause)
+                }
+            }
         }
 
         // Streaming the data to Simple Voice Chat
-        CoroutineScope(Dispatchers.IO).launch {
-            val chunks = pcm.asSequence().chunked(FRAME_SAMPLES)
-            chunks.forEach { frame ->
-                VcPlugin.channel?.play(frame.toShortArray())
-                delay(FRAME_MS.toLong())
-                if (!chunks.iterator().hasNext()) {
-                    isPlaying.set(false)
+        if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val chunks = pcm.asSequence().chunked(FRAME_SAMPLES)
+                chunks.forEach { frame ->
+                    VcPlugin.channel?.play(frame.toShortArray())
+                    delay(FRAME_MS.toLong())
+                    if (!chunks.iterator().hasNext()) {
+                        isPlaying.set(false)
+                    }
                 }
             }
         }
@@ -105,6 +113,37 @@ class EspeakSpeaker : ISpeaker {
 
     override fun isSpeaking(): Boolean {
         return isPlaying.get()
+    }
+
+    suspend fun playToDevice(pcm: ShortArray, device: Mixer.Info? = null) {
+        val pcmBytes = ByteBuffer.allocate(pcm.size * Short.SIZE_BYTES)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .also { buf -> pcm.forEach { buf.putShort(it) } }
+            .array()
+        val dataFormat = AudioFormat(
+            OUTPUT_SAMPLERATE.toFloat(), 16, 1,
+            true, false
+        )
+        val stream = AudioInputStream(
+            ByteArrayInputStream(pcmBytes),
+            dataFormat,
+            (pcmBytes.size / dataFormat.frameSize).toLong()
+        )
+        val mixer = AudioSystem.getMixer(device)  // null = default mixer
+        val info = DataLine.Info(Clip::class.java, null)
+        val clip = mixer.getLine(info) as Clip
+        val targetFormats = AudioSystem.getTargetFormats(dataFormat.encoding, dataFormat)
+            .filter { AudioSystem.isLineSupported(DataLine.Info(Clip::class.java, it)) }
+        if (targetFormats.isEmpty()) {
+            error("No converter from $dataFormat to device format")
+        }
+        val target = targetFormats.first()
+        val converted = AudioSystem.getAudioInputStream(target, stream)
+        clip.open(converted)
+        clip.start()
+        delay((clip.microsecondLength / 1000) + 50)
+        clip.close()
+        stream.close()
     }
 
     companion object {
