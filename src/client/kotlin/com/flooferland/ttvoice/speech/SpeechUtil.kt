@@ -9,6 +9,8 @@ import javax.sound.sampled.AudioSystem
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.speech.ISpeaker.StatusType
 import net.minecraft.client.MinecraftClient
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import org.jetbrains.annotations.CheckReturnValue
 import java.lang.Error
 
@@ -36,6 +38,18 @@ public object SpeechUtil : ISpeaker {
 
     @CheckReturnValue
     override fun speak(text: String): Status {
+        val result = speakInternal(text)
+        when (result) {
+            is Status.Failure -> {
+                val player = MinecraftClient.getInstance().player
+                player?.sendMessage(Text.literal("Text-To-Voice Error ${result.type}:\n    ${result.context}").formatted(Formatting.RED))
+            }
+            else -> {}
+        }
+        return result
+    }
+
+    private fun speakInternal(text: String): Status {
         // Not loaded
         if (loaded == null) {
             return Status.Failure(StatusType.Internal, "Uninitialized")
@@ -62,6 +76,11 @@ public object SpeechUtil : ISpeaker {
                 return Status.Failure(StatusType.VoiceMuted, "Can't play audio while muted")
             if (!VcPlugin.connected)
                 return Status.Failure(StatusType.VoiceDisconnected, "Can't play audio while voice chat is disconnected or disabled")
+        }
+
+        // No routing warning
+        if (!ModState.config.general.let { it.routeThroughVoiceChat || it.routeThroughDevice }) {
+            return Status.Failure(StatusType.NoOutputDevice, "No output set. Make sure to route through at least one output in the mod config")
         }
 
         // Generating the TTS audio and playing it

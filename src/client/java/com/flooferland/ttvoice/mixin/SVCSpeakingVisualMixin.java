@@ -1,6 +1,7 @@
 package com.flooferland.ttvoice.mixin;
 
 import com.flooferland.ttvoice.VcPlugin;
+import com.flooferland.ttvoice.data.ModState;
 import com.flooferland.ttvoice.speech.SpeechUtil;
 import de.maxhenkel.voicechat.voice.client.RenderEvents;
 import net.minecraft.client.gui.DrawContext;
@@ -22,9 +23,10 @@ public class SVCSpeakingVisualMixin {
 		var api = VcPlugin.Companion.getApi();
 		if (api == null) return;
 		boolean hideIcons = api.getClientConfig().getBoolean("hideIcons", false);
+		boolean canSpeak = VcPlugin.Companion.getConnected() && !VcPlugin.Companion.getMuted() && ModState.config.getGeneral().getRouteThroughVoiceChat();
 
 		var accessor = ((RenderEventsAccessor) (Object) this);
-		if (accessor.callShouldShowIcons() && hideIcons != true && VcPlugin.Companion.getConnected() && !VcPlugin.Companion.getMuted()) {
+		if (accessor.callShouldShowIcons() && !hideIcons && canSpeak) {
 			if (SpeechUtil.INSTANCE.isSpeaking()) {
 				accessor.callRenderIcon(guiGraphics, RenderEventsAccessor.getSpeakerIcon());
 			}
