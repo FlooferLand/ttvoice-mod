@@ -68,7 +68,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
     }
 
     fun setBenchmarkResult(startMillis: Long, endMillis: Long) {
-        val string = $"Seconds passed: ${(endMillis - startMillis) / 1000f}"
+        val string = "Seconds passed: ${(endMillis - startMillis) / 1000f}"
         message = Text.literal(string)
         println(string)
     }

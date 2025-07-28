@@ -34,7 +34,7 @@
 		"minecraft": "~${minecraft_version}",
 		"java": ">=${java_version}",
 		"fabric-api": "*",
-		"fabric-language-kotlin": ">=1.13.4+kotlin.2.2.0",
+		"fabric-language-kotlin": ">=${fabric_kotlin_version}+kotlin.${kotlin_version}",
 		"voicechat": ">=${minecraft_version}-${voicechat_mod_version}"
 	},
 	"suggests": {
