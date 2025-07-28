@@ -127,6 +127,9 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${inputs.properties.archivesName}"}
 	}
+	from("LICENSE-EX") {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
 }
 
 // configure the maven publication
