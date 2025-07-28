@@ -32,7 +32,7 @@ class VcPlugin : VoicechatPlugin {
         registration.registerEvent(ClientVoicechatConnectionEvent::class.java, { packet ->
             api = packet.voicechat
             channel = api!!.createStaticAudioChannel(MinecraftClient.getInstance().player!!.uuid)
-            //channel = api!!.createEntityAudioChannel(UUID(), api.fromEntity(MinecraftClient.getInstance().player))
+            //channel = api!!.createEntityAudioChannel(UUID.randomUUID(), api!!.fromEntity(MinecraftClient.getInstance().player))
         }, 10)
     }
 }
