@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "ttvoice",
-	"version": "1.0.0",
+	"version": "${version}",
 	"name": "Text to Voice",
 	"description": "Type to speak!",
 	"authors": ["FlooferLand"],
@@ -30,11 +30,14 @@
 		}
 	],
 	"depends": {
-		"fabricloader": ">=0.16.14",
-		"minecraft": "~1.20.1",
-		"java": ">=17",
+		"fabricloader": ">=${loader_version}",
+		"minecraft": "~${minecraft_version}",
+		"java": ">=${java_version}",
 		"fabric-api": "*",
 		"fabric-language-kotlin": ">=1.13.4+kotlin.2.2.0",
-		"voicechat": ">=1.20.1-2.5.0"
+		"voicechat": ">=${minecraft_version}-${voicechat_mod_version}"
+	},
+	"suggests": {
+		"modmenu": ">=${mod_menu_version}"
 	}
 }

@@ -6,6 +6,7 @@ plugins {
 
 version = project.mod_version
 group = project.maven_group
+int javaVersionInt = java_version.toInteger()
 
 base {
 	archivesName = project.archives_base_name
@@ -52,7 +53,7 @@ dependencies {
 
 	// Mod dependencies
 	modImplementation("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
-	modImplementation "maven.modrinth:simple-voice-chat:fabric-${voicechat_mod_version}"
+	modImplementation "maven.modrinth:simple-voice-chat:fabric-${minecraft_version}-${voicechat_mod_version}"
 
 	// Config
 	implementation "com.moandjiezana.toml:toml4j:${toml4j_version}"
@@ -80,8 +81,10 @@ processClientResources {
 			"minecraft_version": minecraft_version,
 			"loader_version": loader_version,
 			"fabric_version": fabric_version,
+			"java_version": java_version,
 
 			// Mod dependencies
+			"mod_menu_version": mod_menu_version,
 			"voicechat_mod_version": voicechat_mod_version,
 	]
 	properties.forEach((k, v) -> inputs.property(k, v))
@@ -98,14 +101,14 @@ processClientResources {
 }
 
 kotlin {
-	jvmToolchain(17)
+	jvmToolchain(javaVersionInt)
 }
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
+	it.options.release = javaVersionInt
 }
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 	kotlinOptions {
-		jvmTarget = 17
+		jvmTarget = javaVersionInt
 	}
 }
 
