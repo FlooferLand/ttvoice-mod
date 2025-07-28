@@ -1,11 +1,14 @@
 package com.flooferland.ttvoice.speech
 
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
+import com.flooferland.ttvoice.screen.SelectDeviceScreen
 import javax.sound.sampled.AudioSystem
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.speech.ISpeaker.StatusType
+import net.minecraft.client.MinecraftClient
 import org.jetbrains.annotations.CheckReturnValue
 import java.lang.Error
 
@@ -72,8 +75,16 @@ public object SpeechUtil : ISpeaker {
         loaded?.shutUp()
     }
 
-    override fun playTest() {
-        loaded?.playTest()
+    fun playTest() {
+        if (!isTestingArmed()) {
+            LOGGER.warn("playTest was called, but audio testing was not armed")
+            return
+        }
+        loaded?.speak("Audio test")
+    }
+
+    fun isTestingArmed(): Boolean {
+        return MinecraftClient.getInstance().currentScreen is SelectDeviceScreen
     }
 
     override fun isSpeaking(): Boolean {

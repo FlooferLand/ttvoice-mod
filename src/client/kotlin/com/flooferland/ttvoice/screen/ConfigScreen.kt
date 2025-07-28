@@ -3,7 +3,7 @@ package com.flooferland.ttvoice.screen
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
-import com.flooferland.ttvoice.data.TextToVoiceConfig.AudioConfig
+import com.flooferland.ttvoice.data.TextToVoiceConfig.*
 import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.MutVector2Int
@@ -13,6 +13,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.tooltip.Tooltip
 import net.minecraft.client.gui.widget.*
+import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -29,6 +30,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     lateinit var saveButton: ButtonWidget
     lateinit var noticeLabel: TextWidget
     lateinit var currentConfig: TextToVoiceConfig
+    lateinit var selectDeviceButton: ButtonWidget
     var error: Error? = null
         get() = field
         set(value) {
@@ -85,12 +87,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
             // Save button
             saveButton = ButtonWidget.builder(Text.of("Save"))
-                {
-                    ModState.config = currentConfig.clone()
-                    ModConfig.save()
-                    SatisfyingNoises.playSuccess()
-                    saveButton.active = false
-                }
+                { saveSettings() }
                 .position(pad.x + (size.x + pad.x), height - size.y - pad.y)
                 .size(size.x, size.y)
                 .build()
@@ -130,18 +127,25 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 val position = Vector2Int(offset.x, offset.y)
                 var size = Vector2Int(0, 0)
 
+                val experimentalLabelText = labelText.formatted(Formatting.YELLOW)
+                    .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Experimental"))))
+
                 run {
                     // Manually displayed
                     when (fieldName) {
                         // Audio devices button
                         AudioConfig::device.name -> {
                             size = Vector2Int(300, 18)
-                            val b = ButtonWidget.Builder(labelText)
-                            { MinecraftClient.getInstance().setScreen(SelectDeviceScreen(this)) }
+                            selectDeviceButton = ButtonWidget.Builder(experimentalLabelText)
+                                {
+                                    saveSettings()
+                                    MinecraftClient.getInstance().setScreen(SelectDeviceScreen(this))
+                                }
                                 .position(position.x, position.y)
                                 .size(size.x, size.y)
                                 .build()
-                            addWidget(b)
+                            selectDeviceButton.active = ModState.config.general.routeThroughDevice
+                            addWidget(selectDeviceButton)
                             return@run
                         }
 
@@ -174,7 +178,16 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             val thing = object : CheckboxWidget(position.x, position.y, size.x, size.y, labelText, fieldInitialValue as Boolean) {
                                 override fun onClick(mouseX: Double, mouseY: Double) {
                                     super.onClick(mouseX, mouseY)
-                                    setSetting(field, categoryValue, !(field.get(categoryValue) as Boolean))
+                                    val on = !(field.get(categoryValue) as Boolean)
+                                    setSetting(field, categoryValue, on)
+                                    if (fieldName == GeneralConfig::routeThroughDevice.name) {
+                                        selectDeviceButton.active = on
+                                        if (on) {
+                                            warning = Error("NOTE: The mod might not find your device, as this option is experimental.");
+                                        } else {
+                                            warning = null
+                                        }
+                                    }
                                 }
                             }
                             addWidget(thing)
@@ -219,6 +232,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     fun <T> setSetting(field: KProperty1<Any, T>, categoryValue: Any, value: T) {
         (field as KMutableProperty1<Any, T>).set(categoryValue, value)
         dirty = (!currentConfig.compare(ModState.config))
+    }
+
+    fun saveSettings() {
+        ModState.config = currentConfig.clone()
+        ModConfig.save()
+        SatisfyingNoises.playSuccess()
+        saveButton.active = false
     }
 
     override fun resize(client: MinecraftClient, width: Int, height: Int) {

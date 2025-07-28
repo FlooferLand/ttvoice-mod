@@ -14,7 +14,7 @@ object SatisfyingNoises {
         tryPlay(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 0.6f)
     }
     fun playDeny() {
-        tryPlay(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.4f)
+        tryPlay(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f)
     }
     fun playClick(pitchMod: Float = 0.0f) {
         tryPlay(SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), 1f, 1.0f + (pitchMod * 0.1f))

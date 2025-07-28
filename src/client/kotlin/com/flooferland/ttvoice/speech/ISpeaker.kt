@@ -28,11 +28,6 @@ interface ISpeaker {
     /** Check to see if the speaker is currently speaking */
     public fun isSpeaking(): Boolean
 
-    /** Used for the audio output picker */
-    public fun playTest() {
-        speak("Audio test")
-    }
-
     /** Called when the client loads into a world, or the settings screen */
     public fun load(context: WorldContext?): Result<ISpeaker> {
         return Result.success(this);

@@ -12,7 +12,6 @@ data class TextToVoiceConfig(
     data class GeneralConfig(
         var routeThroughVoiceChat: Boolean = true,
         var routeThroughDevice: Boolean = false,
-        var hearSelf: Boolean = true
     )
     data class AudioConfig(
         var device: Int = -1,

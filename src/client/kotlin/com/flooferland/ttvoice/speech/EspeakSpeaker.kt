@@ -2,35 +2,36 @@ package com.flooferland.ttvoice.speech
 
 import com.flooferland.espeak.Espeak
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.util.Extensions.resampleRate
+import com.flooferland.ttvoice.util.SatisfyingNoises
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import java.io.ByteArrayInputStream
+import kotlinx.coroutines.yield
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Style
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
-import javax.sound.sampled.AudioInputStream
-import javax.sound.sampled.Clip
 import javax.sound.sampled.Mixer
+import javax.sound.sampled.SourceDataLine
 
 // TODO: Unify things more. Make the buffer that gets sent to SVC play at about the same time as the buffer that gets sent to the client device.
 //       Right now there are some delays/inconsistencies between what the other players hear and what the player hear
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
-    var speakerJob: Job? = null
-    var runningSpeakerJob = false
+    val activeJobs = Collections.synchronizedList(mutableListOf<SpeechJob>())
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
         val result = Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
@@ -49,8 +50,6 @@ class EspeakSpeaker : ISpeaker {
     }
 
     override fun speak(text: String): Status {
-        speakerJob?.cancel()
-
         // Adding the callback so I can get the data
         // TODO: Look into streaming the data into SVC directly from the callback
         val buffers = mutableListOf<ByteArray>()
@@ -76,110 +75,151 @@ class EspeakSpeaker : ISpeaker {
         // TODO: Look into compiling eSpeak myself and changing its sample rate to skip this step
         val pcm = rawPcm.resampleRate(sampleRate, OUTPUT_SAMPLERATE)
 
-        // Parent speaker task (required to tell when speaking or not)
-        speakerJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            val children = mutableListOf<Job>()
-
-            // Playing locally on the client
-            if (ModState.config.general.hearSelf) {
-                children += CoroutineScope(Dispatchers.IO).launch {
-                    val caught = runCatching {
-                        playToDevice(pcm)
-                    }
-                    caught.onFailure { err ->
-                        LOGGER.error(err.message, err.cause)
-                    }
-                }
-            }
-
-            // Playing through Voicemeeter / external
-            if (ModState.config.general.routeThroughDevice) {
-                children += CoroutineScope(Dispatchers.IO).launch {
-                    val device = AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
-                    val caught = runCatching {
-                        playToDevice(pcm, device)
-                    }
-                    caught.onFailure { err ->
-                        LOGGER.error(err.message, err.cause)
-                    }
-                }
-            }
-
-            // Streaming the data to Simple Voice Chat
-            if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected) {
-                children += CoroutineScope(Dispatchers.IO).launch {
-                    val chunks = pcm.asSequence().chunked(FRAME_SAMPLES).toList()
-                    chunks.forEachIndexed { i, frame ->
-                        if (!isSpeaking()) return@forEachIndexed
-                        VcPlugin.channel?.play(frame.toShortArray())
-                        delay(FRAME_MS.toLong())
-                    }
-                }
-            }
-
-            // Waiting for all yapping tasks to finish
-            runningSpeakerJob = true
-            children.joinAll()
-            runningSpeakerJob = false
+        // Starting speech output
+        val speech = SpeechJob(pcm, context)
+        speech.start() {
+            activeJobs.remove(speech)
+            println("Removing job")
         }
-        speakerJob?.invokeOnCompletion {
-            runningSpeakerJob = false
-        }
+        activeJobs.add(speech)
 
         return Status.Success()
     }
 
     override fun shutUp() {
         Espeak.cancel()
-        speakerJob?.cancelChildren()
-        speakerJob?.cancel()
-        runningSpeakerJob = false
+        activeJobs.forEach { it.cancel() }
     }
 
     override fun isSpeaking(): Boolean {
-        return runningSpeakerJob
+        return activeJobs.isNotEmpty()
     }
 
-    suspend fun playToDevice(pcm: ShortArray, device: Mixer.Info? = null) {
-        val pcmBytes = ByteBuffer.allocate(pcm.size * Short.SIZE_BYTES)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .also { buf -> pcm.forEach { buf.putShort(it) } }
-            .array()
-        val dataFormat = AudioFormat(
-            OUTPUT_SAMPLERATE.toFloat(), 16, 1,
-            true, false
-        )
-        val stream = AudioInputStream(
-            ByteArrayInputStream(pcmBytes),
-            dataFormat,
-            (pcmBytes.size / dataFormat.frameSize).toLong()
-        )
-        val mixer = AudioSystem.getMixer(device)  // null = default mixer
-        val info = DataLine.Info(Clip::class.java, null)
-        val clip = mixer.getLine(info) as Clip
-        val targetFormats = AudioSystem.getTargetFormats(dataFormat.encoding, dataFormat)
-            .filter { AudioSystem.isLineSupported(DataLine.Info(Clip::class.java, it)) }
-        if (targetFormats.isEmpty()) {
-            error("No converter from $dataFormat to device format")
+    class SpeechJob(val pcm: ShortArray, val context: ISpeaker.WorldContext?) {
+        var running = AtomicBoolean(true)
+        var playhead = 0
+        var endCallback: (() -> Unit)? = null
+
+        fun start(onEnd: (() -> Unit)? = null) {
+            endCallback = onEnd
+            CoroutineScope(Dispatchers.IO).launch {
+                val errHandler = { err: Throwable ->
+                    sendError(
+                        context,
+                        "An error occurred opening the audio device. The audio will still play through Simple Voice Chat, but try changing your main audio device's sample rate or opening an issue on the GitHub repository",
+                        (err.message ?: err.cause ?: err.toString()) as String
+                    )
+                }
+
+                val deviceInfo =
+                    if (ModState.config.general.routeThroughDevice) {
+                        AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
+                    } else {
+                        null
+                    }
+                val deviceResult = deviceInfo?.let { getDevice(it) }
+                deviceResult?.onFailure(errHandler)
+                val device = deviceResult?.getOrNull()
+
+                while (running.get()) {
+                    val frame = nextFrame()
+                    if (frame == null) break
+                    val bytes = pcmAsBytes(frame)
+
+                    // Playing through another device (Voicemeeter, etc)
+                    device?.write(bytes, 0, bytes.size)
+
+                    // Streaming the data to Simple Voice Chat
+                    if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected && !SpeechUtil.isTestingArmed()) {
+                        VcPlugin.channel?.play(frame)
+                    }
+
+                    // Delay
+                    val frameDelayNs = (FRAME_MS - FRAME_MS_STITCH) * 1_000_000L
+                    val nextFrameTime = (System.nanoTime() + frameDelayNs)
+                    while (System.nanoTime() < nextFrameTime) yield()
+                }
+
+                running.set(false)
+                device?.close()
+                endCallback?.invoke()
+                playhead = 0
+            }
         }
-        val target = targetFormats.first()
-        val converted = AudioSystem.getAudioInputStream(target, stream)
-        clip.open(converted)
-        clip.start()
-        delay(FRAME_MS.toLong())
-        while (true) {
-            if (clip.isRunning && isSpeaking()) break
-            delay(FRAME_MS.toLong())
+
+        fun cancel() {
+            running.set(false)
         }
-        clip.close()
-        stream.close()
+
+        // TODO: Fix nexFrame; Currently, the playhead is always larger than pcm.size
+        fun nextFrame(): ShortArray? {
+            if (playhead > pcm.size || !running.get()) return null
+            val end = (playhead + BUFFER_SIZE).coerceAtMost(pcm.size)
+            val chunk = pcm.sliceArray(playhead until end)
+            playhead += BUFFER_SIZE
+            return chunk
+        }
+
+        /** Gets the source data line; Will return an error if Java's audio system is acting up, as it always does */
+        fun getDevice(device: Mixer.Info? = null): Result<SourceDataLine> {
+            val bestFormat = AudioFormat(
+                OUTPUT_SAMPLERATE.toFloat(), 16, 1,
+                true, false
+            )
+
+            // Finding a line
+            val result = runCatching { AudioSystem.getSourceDataLine(bestFormat, device) }
+            result.onFailure { err ->
+                return Result.failure(err)
+            }
+
+            // Starting the line
+            val line = result.getOrNull()!!
+            val lineResult = runCatching {
+                line.open(bestFormat, BUFFER_SIZE)
+                line.start()
+            }
+            lineResult.onSuccess {
+                return Result.success(line)
+            }
+            lineResult.onFailure { err ->
+                return Result.failure(Error("Error opening line: $err"))
+            }
+            return Result.failure(Error("Unknown"))
+        }
+
+        fun pcmAsBytes(data: ShortArray): ByteArray {
+            return ByteBuffer.allocate(data.size * Short.SIZE_BYTES)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .also { buf -> data.forEach { buf.putShort(it) } }
+                .array()
+        }
+
+        fun sendError(context: ISpeaker.WorldContext?, text: String, details: String) {
+            context?.player?.sendMessage(
+                Text.literal("$MOD_ID error: $text")
+                    .formatted(Formatting.RED, Formatting.BOLD, Formatting.UNDERLINE)
+                    .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(details))))
+            )
+            LOGGER.error("$text ($details)")
+            SatisfyingNoises.playDeny()
+        }
     }
 
     companion object {
+        /** Target sample rate for SVC: https://modrepo.de/minecraft/voicechat/api/examples */
         const val OUTPUT_SAMPLERATE = 48_000
-        const val FRAME_MS = 20
-        const val FRAME_SAMPLES = (OUTPUT_SAMPLERATE * FRAME_MS) / 1_000
-        const val BUFFER_SIZE = FRAME_MS * 3 // frames
-        var sampleRate = -1 // filled by eSpeak
+
+        /** How long each frame should last */
+        const val FRAME_MS = 100
+
+        /** Stitch frames to prevent harsh cuts; Should be way less than FRAME_MS */
+        const val FRAME_MS_STITCH = 2
+
+        /** The size of one audio chunk */
+        const val BUFFER_SIZE = (OUTPUT_SAMPLERATE * FRAME_MS) / 1_000
+
+        /** Input sample rate, filled by eSpeak */
+        var sampleRate = -1
     }
 }
