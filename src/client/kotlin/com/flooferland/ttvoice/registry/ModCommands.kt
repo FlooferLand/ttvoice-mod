@@ -129,18 +129,6 @@ object ModCommands {
                     .then(speakCommandLiteral)
                     .then(stopSpeakingCommandLiteral)
                     .then(
-                        ClientCommandManager.literal(Commands.VoiceSet.command)
-                            .then(
-                                ClientCommandManager.literal(Commands.VoiceSet.subcommand).then(
-                                    argument("voice", string())
-                                        .executes(ModCommands::setVoice)
-                                        /*.suggests({ context, builder ->
-                                            CommandSource.suggestMatching(mary?.availableVoices, builder)
-                                        })*/
-                                )
-                            )
-                    )
-                    .then(
                         ClientCommandManager.literal(Commands.MixerSet.command)
                             .then(
                                 ClientCommandManager.literal(Commands.MixerSetExact.subcommand).then(
