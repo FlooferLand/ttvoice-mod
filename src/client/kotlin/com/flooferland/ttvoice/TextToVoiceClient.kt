@@ -12,6 +12,8 @@ import java.nio.file.Files
 
 class TextToVoiceClient : ClientModInitializer {
     override fun onInitializeClient() {
+        isFiguraInstalled = FabricLoader.getInstance().isModLoaded("figura")
+
         // Setting up mod data files
         Files.createDirectories(dataDir)
 
@@ -28,5 +30,6 @@ class TextToVoiceClient : ClientModInitializer {
         const val MOD_ID: String = "ttvoice"
         val LOGGER: Logger = LoggerFactory.getLogger(MOD_ID)
         val dataDir = FabricLoader.getInstance().gameDir.resolve(MOD_ID)
+        var isFiguraInstalled: Boolean = false
     }
 }

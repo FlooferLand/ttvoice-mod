@@ -29,6 +29,18 @@ repositories {
 	maven { url "https://maven.shedaniel.me/" }
 	maven { url "https://maven.terraformersmc.com/releases/" }
 
+	// Figura integration
+	maven { url 'https://maven.quiltmc.org/repository/release/' }
+	maven {
+		name = "Figura Maven Release"
+		url = uri("https://maven.figuramc.org/releases")
+	}
+	maven {
+		name = "Figura Maven Snapshots"
+		url = uri("https://maven.figuramc.org/snapshots")
+	}
+	maven { url 'https://jitpack.io' }
+
 	// Development environment auth
 	maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
 }
@@ -60,6 +72,13 @@ dependencies {
 	include "com.moandjiezana.toml:toml4j:${toml4j_version}"
 	modApi "com.terraformersmc:modmenu:${mod_menu_version}"
 
+	// Figura integration
+	compileOnly("com.github.FiguraMC.luaj:luaj-core:${luaj_version}-figura")
+	compileOnly("com.github.FiguraMC.luaj:luaj-jse:${luaj_version}-figura")
+	compileOnly("com.neovisionaries:nv-websocket-client:${nv_websocket_version}")
+	compileOnly("org.figuramc:figura-fabric:${figura_version}+${minecraft_version}")
+	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
+
 	// Outside dependencies
 	modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${dev_auth_version}")
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
@@ -88,6 +107,7 @@ processClientResources {
 			"mod_menu_version": mod_menu_version,
 			"voicechat_mod_version": voicechat_mod_version,
 			"fabric_kotlin_version": fabric_kotlin_version,
+			"figura_version": figura_version,
 	]
 	properties.forEach((k, v) -> inputs.property(k, v))
 

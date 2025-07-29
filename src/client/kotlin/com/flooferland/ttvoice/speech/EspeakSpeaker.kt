@@ -1,15 +1,18 @@
 package com.flooferland.ttvoice.speech
 
 import com.flooferland.espeak.Espeak
+import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.figura.FiguraEventPlugin
 import com.flooferland.ttvoice.speech.ISpeaker.Status
 import com.flooferland.ttvoice.util.Extensions.resampleRate
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import net.minecraft.text.HoverEvent
@@ -132,6 +135,11 @@ class EspeakSpeaker : ISpeaker {
                     // Streaming the data to Simple Voice Chat
                     if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected && !SpeechUtil.isTestingArmed()) {
                         VcPlugin.channel?.play(frame)
+                    }
+
+                    // Streaming to Figura
+                    if (TextToVoiceClient.isFiguraInstalled) {
+                        FiguraEventPlugin.sendSpeakingEvent(frame)
                     }
 
                     // Delay

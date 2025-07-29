@@ -21,6 +21,9 @@
 		],
 		"modmenu": [
 			"com.flooferland.ttvoice.ModMenuEntry"
+		],
+		"figura_event": [
+			"com.flooferland.ttvoice.figura.FiguraEventPlugin"
 		]
 	},
 	"mixins": [
@@ -38,6 +41,7 @@
 		"voicechat": ">=${minecraft_version}-${voicechat_mod_version}"
 	},
 	"suggests": {
-		"modmenu": ">=${mod_menu_version}"
+		"modmenu": ">=${mod_menu_version}",
+		"figura": ">=${figura_version}"
 	}
 }
