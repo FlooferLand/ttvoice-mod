@@ -10,6 +10,7 @@
     "config.ttvoice.general.routeThroughVoiceChat.tooltip": "Routes TTS audio through the currently used voice chat mod",
     "config.ttvoice.general.routeThroughDevice": "Route through device",
     "config.ttvoice.general.routeThroughDevice.tooltip": "Routes TTS audio through a sound device (Ex: Voicemeeter)",
+    "config.ttvoice.general.hearSelf": "Hear self",
     "config.ttvoice.audio": "Audio",
     "config.ttvoice.audio.device": "Set audio device to route through",
     "config.ttvoice.audio.ttsBackend": "Text-to-speech backend",

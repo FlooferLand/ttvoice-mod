@@ -12,7 +12,6 @@ import com.flooferland.ttvoice.util.Extensions.resampleRate
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import net.minecraft.text.HoverEvent
@@ -25,7 +24,6 @@ import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.DataLine
 import javax.sound.sampled.Mixer
 import javax.sound.sampled.SourceDataLine
 
@@ -134,7 +132,7 @@ class EspeakSpeaker : ISpeaker {
 
                     // Streaming the data to Simple Voice Chat
                     if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected && !SpeechUtil.isTestingArmed()) {
-                        VcPlugin.channel?.play(frame)
+                        VcPlugin.sendFrame(frame)
                     }
 
                     // Streaming to Figura
@@ -218,11 +216,12 @@ class EspeakSpeaker : ISpeaker {
         /** Target sample rate for SVC: https://modrepo.de/minecraft/voicechat/api/examples */
         const val OUTPUT_SAMPLERATE = 48_000
 
-        /** How long each frame should last */
-        const val FRAME_MS = 100
+        // TODO: Separate SVC from this value by manually re-chunking the data once it reaches SVC
+        /** How long each frame should last; Must be 20 for SVC to work correctly */
+        const val FRAME_MS = 20
 
         /** Stitch frames to prevent harsh cuts; Should be way less than FRAME_MS */
-        const val FRAME_MS_STITCH = 2
+        const val FRAME_MS_STITCH = 0
 
         /** The size of one audio chunk */
         const val BUFFER_SIZE = (OUTPUT_SAMPLERATE * FRAME_MS) / 1_000
