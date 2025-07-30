@@ -32,6 +32,8 @@ class FiguraEventPlugin : FiguraEvent {
         @LuaWhitelist var TTS_SPEAK_RAW = LuaEvent()
 
         const val ENVELOPE_BANDS = 20
+        const val API_VERSION = 1  // NOTE: Bump this up any time there's a breaking change to the code below
+
         fun sendSpeakingEvent(frame: ShortArray = shortArrayOf()) {
             val avatar = AvatarManager.getAvatarForPlayer(FiguraMod.getLocalPlayerUUID())
             if (avatar == null || avatar.luaRuntime == null) return

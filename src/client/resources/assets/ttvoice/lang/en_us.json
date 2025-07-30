@@ -1,6 +1,7 @@
 {
     "category.ttvoice.general": "Text to Voice",
     "key.ttvoice.speak": "Open speech screen",
+    "figura.docs.globals.ttvoice": "The global instance of TextToVoiceAPI",
 
     "-- Config screen": "",
     "config.ttvoice.title": "Text to Voice config",

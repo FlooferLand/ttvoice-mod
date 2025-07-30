@@ -13,18 +13,11 @@
 	"icon": "assets/ttvoice/textures/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": [
-            "com.flooferland.ttvoice.TextToVoiceClient"
-		],
-		"voicechat": [
-			"com.flooferland.ttvoice.VcPlugin"
-		],
-		"modmenu": [
-			"com.flooferland.ttvoice.ModMenuEntry"
-		],
-		"figura_event": [
-			"com.flooferland.ttvoice.figura.FiguraEventPlugin"
-		]
+		"client": ["com.flooferland.ttvoice.TextToVoiceClient"],
+		"voicechat": ["com.flooferland.ttvoice.VcPlugin"],
+		"modmenu": ["com.flooferland.ttvoice.ModMenuEntry"],
+		"figura_event": ["com.flooferland.ttvoice.figura.FiguraEventPlugin"],
+		"figura_api": ["com.flooferland.ttvoice.figura.TextToVoiceAPI"]
 	},
 	"mixins": [
 		{
