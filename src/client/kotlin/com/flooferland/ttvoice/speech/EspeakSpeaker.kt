@@ -20,15 +20,12 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.Mixer
 import javax.sound.sampled.SourceDataLine
-
-// TODO: Unify things more. Make the buffer that gets sent to SVC play at about the same time as the buffer that gets sent to the client device.
-//       Right now there are some delays/inconsistencies between what the other players hear and what the player hear
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
@@ -80,7 +77,6 @@ class EspeakSpeaker : ISpeaker {
         val speech = SpeechJob(pcm, context)
         speech.start() {
             activeJobs.remove(speech)
-            println("Removing job")
         }
         activeJobs.add(speech)
 
@@ -157,7 +153,6 @@ class EspeakSpeaker : ISpeaker {
             running.set(false)
         }
 
-        // TODO: Fix nexFrame; Currently, the playhead is always larger than pcm.size
         fun nextFrame(): ShortArray? {
             if (playhead > pcm.size || !running.get()) return null
             val end = (playhead + BUFFER_SIZE).coerceAtMost(pcm.size)
