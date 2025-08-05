@@ -22,10 +22,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.sound.sampled.AudioFormat
-import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.Mixer
-import javax.sound.sampled.SourceDataLine
+import javax.sound.sampled.*
+
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
@@ -169,7 +167,10 @@ class EspeakSpeaker : ISpeaker {
             )
 
             // Finding a line
-            val result = runCatching { AudioSystem.getSourceDataLine(bestFormat, device) }
+            val result = runCatching {
+                val info = DataLine.Info(SourceDataLine::class.java, bestFormat)
+                (AudioSystem.getLine(info) as SourceDataLine)
+            }
             result.onFailure { err ->
                 return Result.failure(err)
             }
@@ -177,7 +178,7 @@ class EspeakSpeaker : ISpeaker {
             // Starting the line
             val line = result.getOrNull()!!
             val lineResult = runCatching {
-                line.open(bestFormat, BUFFER_SIZE)
+                line.open(bestFormat, BUFFER_SIZE * 2)
                 line.start()
             }
             lineResult.onSuccess {
