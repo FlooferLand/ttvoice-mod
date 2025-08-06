@@ -6,6 +6,8 @@ import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.google.common.reflect.ClassPath
 import com.sun.jna.*
+import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.client.MinecraftClient
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.file.*
@@ -171,7 +173,12 @@ interface EspeakLibNative : Library {
     companion object {
         const val LIB_NAME = "libespeak-ng"
         var instance: EspeakLibNative? = null
-        val targetNativesDir: Path = TextToVoiceClient.dataDir.resolve("native")
+
+        val targetNativesDir: Path = if (MinecraftClient.getInstance() != null)
+            TextToVoiceClient.dataDir.resolve("native")
+        else
+            Path.of("src/client/resources/native")
+
         val dataDir: Path = targetNativesDir.resolve("espeak-ng-data")
 
         init {

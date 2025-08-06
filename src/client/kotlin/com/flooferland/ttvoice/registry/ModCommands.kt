@@ -1,14 +1,13 @@
 package com.flooferland.ttvoice.registry
 
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
-import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.data.ModState
+import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
 import com.mojang.brigadier.arguments.StringArgumentType.getString
 import com.mojang.brigadier.arguments.StringArgumentType.greedyString
-import com.mojang.brigadier.arguments.StringArgumentType.string
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
