@@ -1,6 +1,5 @@
 package com.flooferland.ttvoice.screen.widgets
 
-import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import net.minecraft.client.font.TextRenderer
@@ -55,11 +54,19 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
         var handled = false
         when (keyCode) {
             GLFW.GLFW_KEY_UP -> {
-                if (screen.historyPointer > 0) {
+                if (text == "") {// Unclear
+
+                } else if (screen.historyPointer > 0) {
                     screen.historyPointer -= 1
+
+                    if (screen.historyScroll < screen.historyScrollMax) {
+                        screen.historyScroll += 1
+                    }
                 } else {
                     screen.historyPointer = SpeechScreen.history.lastIndex
+                    screen.historyScroll = 0
                 }
+
                 text = SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
                 screen.updateHistoryWidget()
                 handled = true
@@ -70,14 +77,20 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
                 var clear = false
                 if (screen.historyPointer < SpeechScreen.history.lastIndex) {
                     screen.historyPointer += 1
+
+                    if (screen.historyScroll > 0) {
+                        screen.historyScroll -= 1
+                    }
                 } else { // Clear the text for the most recent entry; easy way for the user to clear the textbox
                     if (modifiers != 0 || text.isEmpty()) {
                         screen.historyPointer = 0
+                        screen.historyScroll = screen.historyScrollMax
                     } else {
                         clear = true
                         text = ""
                     }
                 }
+
                 text = if (clear) ""
                     else SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
                 screen.updateHistoryWidget(clear)

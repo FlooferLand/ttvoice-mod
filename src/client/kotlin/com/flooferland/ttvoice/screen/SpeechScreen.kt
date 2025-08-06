@@ -15,6 +15,7 @@ import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.joml.Vector2i
+import kotlin.math.max
 
 const val debugDelay = false
 
@@ -24,7 +25,6 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     private lateinit var stopButton: ButtonWidget
     private lateinit var historyToggleButton: ButtonWidget
     private lateinit var infoLabel: SpeechInfoLabelWidget
-    //private lateinit var historyWidget: HistoryWidget
     private lateinit var historyTextWidget: MultilineTextWidget
     var historyPointer: Int
     var error: Error? = null
@@ -35,6 +35,9 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         }
 
     var debugTestStart: Long = 0
+
+    var historyScroll: Int = 0
+    var historyScrollMax: Int = 0
 
     init {
         historyPointer = if (SpeechScreen.history.isNotEmpty()) SpeechScreen.history.lastIndex else 0
@@ -135,12 +138,20 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
     // Gets called when the history is updated
     fun updateHistoryWidget(clear: Boolean = false) {
-        val maxRows = 15
+        val historyBottomY = (height * 0.75).toInt()
+        val historyTopY = (height * 0.1).toInt()
+        val maxRows = ((historyBottomY - historyTextWidget.y) / (textRenderer.fontHeight+2)).coerceAtLeast(1)
+
+        historyScrollMax = max(0, history.size - maxRows)
+        historyScroll = historyScroll.coerceIn(0, historyScrollMax)
+
+        val sliceEnd = history.size - historyScroll
+        val sliceStart = (sliceEnd - maxRows).coerceAtLeast(0)
 
         // Setting history text
         val text = Text.literal("")
-        for ((i, history) in SpeechScreen.history.withIndex()) {
-            if (i > maxRows) continue
+        for (i in sliceStart until sliceEnd) {
+            val history = SpeechScreen.history[i]
             val isCurrent = (i == historyPointer) && !clear
             val style = Style.EMPTY
                 .withBold(isCurrent)
@@ -161,7 +172,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // Setting history size stuff
         historyTextWidget.x = (width * 0.5).toInt() - (historyTextWidget.width / 2)
-        historyTextWidget.y = (height * 0.1).toInt()
+        historyTextWidget.y = historyTopY
         historyTextWidget.setMaxRows(maxRows)
         historyTextWidget.setCentered(true)
     }
@@ -276,7 +287,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         val speaking = SpeechUtil.isSpeaking()
         stopButton.active = speaking
 
-        @Suppress("SimplifyBooleanWithConstants")
+        @Suppress("SimplifyBooleanWithConstants", "KotlinConstantConditions")
         if (debugDelay && !speaking && debugTestStart.toInt() != 0) {
             val endTime = System.currentTimeMillis()
             infoLabel.setBenchmarkResult(startMillis = debugTestStart, endMillis = endTime)
