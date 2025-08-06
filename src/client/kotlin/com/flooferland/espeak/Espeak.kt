@@ -8,7 +8,7 @@ import com.sun.jna.Pointer
 
 /** Safe nearly 1:1  Kotlin wrapping around the native lib, so the JVM won't go KABOOM */
 object Espeak {
-    private val lib: EspeakLibNative = EspeakLibNative.instance
+    private val lib: EspeakLibNative = EspeakLibNative.instance!!
 
     /** @see EspeakLibNative.espeak_Initialize */
     fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 300, path: String? = null, options: Int = 0): Result<Int> {
