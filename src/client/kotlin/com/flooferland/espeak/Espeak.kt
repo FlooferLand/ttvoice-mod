@@ -3,6 +3,7 @@
 package com.flooferland.espeak
 
 import com.sun.jna.Pointer
+import kotlin.io.path.pathString
 
 // TODO: Thoroughly check everything over and make sure it's safe
 
@@ -11,7 +12,7 @@ object Espeak {
     private val lib: EspeakLibNative = EspeakLibNative.instance!!
 
     /** @see EspeakLibNative.espeak_Initialize */
-    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 300, path: String? = null, options: Int = 0): Result<Int> {
+    fun initialize(output: AudioOutput = AudioOutput.Playback, bufferSize: Int = 300, path: String? = EspeakLibNative.dataDir.pathString, options: Int = 0): Result<Int> {
         val sampleRate = lib.espeak_Initialize(output.int, bufferSize, path, options)
         if (sampleRate == ErrorType.InternalError.int) {
             return Result.failure(Error("eSpeak initialization encountered an internal error"))

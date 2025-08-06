@@ -4,11 +4,13 @@ package com.flooferland.espeak
 
 import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.google.common.reflect.ClassPath
 import com.sun.jna.*
-import net.fabricmc.loader.api.FabricLoader
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.file.*
 import kotlin.io.path.absolutePathString
+
 
 /**
  * Manually (and very painfully) written native Kotlin bindings for libespeak <br/>
@@ -169,35 +171,25 @@ interface EspeakLibNative : Library {
     companion object {
         const val LIB_NAME = "libespeak-ng"
         var instance: EspeakLibNative? = null
-        val nativeDir = TextToVoiceClient.dataDir.resolve("native")
+        val targetNativesDir: Path = TextToVoiceClient.dataDir.resolve("native")
+        val dataDir: Path = targetNativesDir.resolve("espeak-ng-data")
 
         init {
-            Files.createDirectories(nativeDir)
-
-            // Reading the OS
-            val osName = System.getProperty("os.name").lowercase()
-            val libFile = when {
-                listOf("windows", "microsoft").any { it in osName } -> "$LIB_NAME.dll"
-                else -> "$LIB_NAME.so"
-            }
+            Files.createDirectories(targetNativesDir)
 
             // Read library as stream
-            val libPath = "/native/$libFile"
-            val library = EspeakLibNative::class.java.getResourceAsStream(libPath)
-            library?.let {
-                // TODO: Do checksum to see if it's worth extracting and replacing the file or not
-
-                // Copying the library
-                val targetLibFile = nativeDir.resolve(libFile)
+            val nativesDir = TextToVoiceClient::class.java.getResource("/native")
+            nativesDir?.let {
+                // Copying out all the files
                 val copyResult = runCatching {
-                    Files.copy(library, targetLibFile, StandardCopyOption.REPLACE_EXISTING)
+                    extractAll("native/", targetNativesDir)
                 }
                 copyResult.onFailure { err ->
-                    error("$MOD_ID: Failed to load native library, unable to copy to '$targetLibFile' ($err)")
+                    error("$MOD_ID: Failed to load native library, unable to copy to '$targetNativesDir' ($err)")
                 }
 
                 // Loading the library
-                System.setProperty("jna.library.path", nativeDir.absolutePathString())
+                System.setProperty("jna.library.path", targetNativesDir.absolutePathString())
                 val result = runCatching {
                     instance = Native.load(LIB_NAME, EspeakLibNative::class.java)
                 }
@@ -205,17 +197,35 @@ interface EspeakLibNative : Library {
                     Native.setProtected(true)
                 }
                 result.onFailure {
-                    error("$MOD_ID: Failed to load $LIB_NAME from '$targetLibFile'")
+                    error("$MOD_ID: Failed to load $LIB_NAME from '$targetNativesDir'. Please try installing espeak-ng manually")
                 }
             }
-            if (library == null) {
-                error("$MOD_ID: Failed to load native library, no library found inside the jar file at\"$libPath\"")
+            if (nativesDir == null) {
+                error("$MOD_ID: Failed to load native library, unable to extract jar file contents. Please install espeak-ng manually")
             }
+        }
 
-            // Copying license file
-            val license = EspeakLibNative::class.java.getResourceAsStream("/native/LICENSE.txt")
-            license?.let {
-                Files.copy(it, nativeDir.resolve("LICENSE.txt"), StandardCopyOption.REPLACE_EXISTING)
+        /** Magic function I stole that does something the JVM standard library should really include by default -.- */
+        @Throws(IOException::class)
+        fun extractAll(prefix: String, targetDir: Path) {
+            val loader = this::class.java.getClassLoader()
+            val classPath = ClassPath.from(loader)
+            for (info in classPath.getResources()) {
+                val resourceName = info.getResourceName()
+                if (!resourceName.startsWith(prefix)) continue
+
+                // TODO: Do checksum to see if it's worth extracting and replacing the file or not
+
+                // Strip the prefix/slashes
+                var relPath = resourceName.substring(prefix.length)
+                relPath = relPath.replaceFirst("^/+".toRegex(), "")
+
+                val out = targetDir.resolve(relPath)
+                Files.createDirectories(out.getParent())
+                loader.getResourceAsStream(resourceName).use { stream ->
+                    if (stream == null) throw FileNotFoundException(resourceName)
+                    Files.copy(stream, out, StandardCopyOption.REPLACE_EXISTING)
+                }
             }
         }
     }

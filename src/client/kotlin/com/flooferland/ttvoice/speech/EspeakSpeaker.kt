@@ -24,7 +24,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.*
 
-
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
     val activeJobs = Collections.synchronizedList(mutableListOf<SpeechJob>())
