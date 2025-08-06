@@ -7,6 +7,7 @@ import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
 import com.mojang.brigadier.arguments.StringArgumentType.getString
+import com.mojang.brigadier.arguments.StringArgumentType.greedyString
 import com.mojang.brigadier.arguments.StringArgumentType.string
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
@@ -118,7 +119,7 @@ object ModCommands {
                     return@executes 0
                 }
                 .then(
-                    argument("text", string())
+                    argument("text", greedyString())
                         .executes(ModCommands::speakCommand)
                 )
             val stopSpeakingCommandLiteral = ClientCommandManager.literal(Commands.StopSpeaking.command)
@@ -135,7 +136,7 @@ object ModCommands {
                                     argument("mixer", integer())
                                         .executes(ModCommands::setMixer)
                                         .suggests({ context, builder ->
-                                            val mixers = AudioSystem.getMixerInfo().map { mixer -> mixer.name }
+                                            val mixers = AudioSystem.getMixerInfo().mapIndexed { i, mixer -> "($i) ${mixer.name}" }
                                             CommandSource.suggestMatching(mixers, builder)
                                         })
                                 )
