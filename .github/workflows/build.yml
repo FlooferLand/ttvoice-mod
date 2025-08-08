@@ -76,10 +76,10 @@ jobs:
                 esac
 
                 echo "Builds:"
-                ls builds/
+                ls build/
 
-                echo "builds/libs:"
-                ls builds/libs/
+                echo "build/libs:"
+                ls build/libs/
 
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
