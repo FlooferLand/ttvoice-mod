@@ -128,6 +128,15 @@ jobs:
             - name: Make Gradle wrapper executable (grrr Linux grrrrrr)
               run: chmod +x ./gradlew
 
+            - name: Validate Gradle wrapper
+              uses: gradle/actions/wrapper-validation@v4
+            
+            - name: Setup JDK
+              uses: actions/setup-java@v4
+              with:
+                java-version: '21'
+                distribution: 'temurin'
+
             - name: Building jar
               run: ./gradlew assemble --no-daemon
             
