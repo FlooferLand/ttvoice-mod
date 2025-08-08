@@ -44,6 +44,7 @@ jobs:
             - name: Setup CMake helper (cross-platform)
               uses: jwlawson/actions-setup-cmake@v2
             
+            # Configure stuff (script is the same for both versions but idk how to set shells)
             - name: Configure and set up espeak-ng (Windows)
               if: runner.os == 'Windows'
               shell: msys2 {0}
@@ -51,12 +52,8 @@ jobs:
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
                 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-                echo "HELP: "
-                cmake --build build --target help
-                printf "\nBUILD:\n"
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
                 cmake --install build --prefix ./install
-            
             - name: Configure and set up espeak-ng (Linux/macOS)
               if: runner.os != 'Windows'
               run: |
@@ -77,7 +74,7 @@ jobs:
                 case "$(uname -s)" in
                     Linux*)  LIB="install/lib/libespeak-ng.so" ;;
                     Darwin*) LIB="install/lib/libespeak-ng.dylib" ;;
-                    MINGW*|MSYS*|CYGWIN*) LIB="install/bin/espeak-ng.dll" ;;
+                    MINGW*|MSYS*|CYGWIN*) LIB="install/bin/libespeak-ng.dll" ;;
                     *) LIB="" ;;
                 esac
 
