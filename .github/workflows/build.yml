@@ -68,8 +68,7 @@ jobs:
               shell: bash
               run: |
                 cd espeak-ng
-                # candidate names for outputs
-                LIB=$(find build -type f \( -name "libespeak-ng.*" -o -name "libespeak-ng.so.*" -o -name "libespeak-ng.so" -o -name "libespeak-ng.dylib" -o -iname "*espeak-ng*.dll" \) | head -n1 || true)
+                LIB=$(find build -type f \( -name "libespeak-ng.so" -o -name "libespeak-ng.dylib" -o -iname "*espeak-ng*.dll" \) | head -n1 || true)
                 echo "found=$LIB"
                 echo "found=$LIB" >> $GITHUB_OUTPUT
             
