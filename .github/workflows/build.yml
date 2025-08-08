@@ -38,7 +38,7 @@ jobs:
               if: runner.os == 'Windows'
               shell: msys2 {0}
               run: |
-                pacman -S --noconfirm --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config
+                pacman -S --noconfirm --needed git mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config
             
             - name: Setup CMake helper (cross-platform)
               uses: jwlawson/actions-setup-cmake@v2
