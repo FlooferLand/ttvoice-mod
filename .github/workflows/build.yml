@@ -59,7 +59,7 @@ jobs:
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
                 mkdir -p build
-                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=./build/libs
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
 
             # Find espeak-ng
@@ -68,7 +68,24 @@ jobs:
               shell: bash
               run: |
                 cd espeak-ng
-                LIB=$(find build -type f \( -name "libespeak-ng.so" -o -name "libespeak-ng.dylib" -o -iname "*espeak-ng*.dll" \) | head -n1 || true)
+                case "$(uname -s)" in
+                    Linux*)  LIB="build/libs/libespeak-ng.so" ;;
+                    Darwin*) LIB="build/libs/libespeak-ng.dylib" ;;
+                    MINGW*|MSYS*|CYGWIN*) LIB="build/libs/espeak-ng.dll" ;;
+                    *) LIB="" ;;
+                esac
+
+                echo "Builds:"
+                ls builds/
+
+                echo "builds/libs:"
+                ls builds/libs/
+
+                if [ ! -f "$LIB" ]; then
+                    echo "libespeak.* not found at expected path: $LIB"
+                    exit 1
+                fi
+                
                 echo "found=$LIB"
                 echo "found=$LIB" >> $GITHUB_OUTPUT
             
