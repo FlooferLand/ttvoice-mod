@@ -21,6 +21,7 @@ jobs:
 
             - name: Set espeak-ng commit SHA
               id: espeak-sha
+              shell: bash
               run: echo "sha=$(git ls-remote https://github.com/espeak-ng/espeak-ng.git HEAD | cut -f1)" >> $GITHUB_OUTPUT
 
             - name: Cache espeak-ng
@@ -57,6 +58,7 @@ jobs:
                 pacman -S --noconfirm --needed git mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config
             
             - name: Setup CMake helper (cross-platform)
+              if: steps.cache-espeak.outputs.cache-hit != 'true'
               uses: jwlawson/actions-setup-cmake@v2
             
             # Configure stuff
