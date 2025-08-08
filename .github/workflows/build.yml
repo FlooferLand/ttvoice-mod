@@ -65,6 +65,7 @@ jobs:
             # Find espeak-ng
             - name: Finding the built out espeak-ng lib
               id: findlib
+              shell: bash
               run: |
                 cd espeak-ng
                 # candidate names for outputs
