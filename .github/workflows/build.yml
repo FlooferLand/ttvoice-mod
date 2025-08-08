@@ -1,30 +1,120 @@
-# Automatically build the project and run any configured tests for every push
-# and submitted pull request. This can help catch issues that only occur on
-# certain platforms or Java versions, and provides a first line of defence
-# against bad commits.
-
-name: build
-on: [pull_request, push]
+name: Build the mod for Linux, Windows, and MacOS
+on:
+    workflow_dispatch
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
-      - name: setup jdk
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'microsoft'
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
-      - name: build
-        run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artifacts
-          path: build/libs/
+    build-natives:
+        runs-on: ${{ matrix.runner }}
+        strategy:
+            matrix:
+                runner: [ubuntu-latest, macos-latest, windows-latest]
+        
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+        
+            # Install dependencies
+            - name: Install dependencies (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y build-essential cmake pkg-config libasound2-dev libpulse-dev
+            
+            
+            - name: Install dependencies (MacOS)
+              if: runner.os == 'macOS'
+              run: |
+                brew update
+                brew install cmake pkg-config
+            
+            - name: Setup MSYS2 (Windows)
+              if: runner.os == 'Windows'
+              uses: msys2/setup-msys2@v2
+              with:
+                msystem: MINGW64
+                update: true
+
+            - name: Install packages via MSYS2 (Windows)
+              if: runner.os == 'Windows'
+              shell: bash -lc
+              run: |
+                pacman -S --noconfirm --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config
+            
+            - name: Setup CMake helper (cross-platform)
+              uses: jwlawson/actions-setup-cmake@v2
+            
+            # Build and set up espeak-ng
+            - name: Configure and set up espeak-ng
+              shell: bash -lc
+              run: |
+                git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+                cd espeak-ng
+                mkdir -p build
+                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+                cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
+
+            # Find espeak-ng
+            - name: Finding the built out espeak-ng lib
+              id: findlib
+              shell: bash -lc
+              run: |
+                cd espeak-ng
+                # candidate names for outputs
+                LIB=$(find build -type f \( -name "libespeak-ng.*" -o -name "libespeak-ng.so.*" -o -name "libespeak-ng.so" -o -name "libespeak-ng.dylib" -o -iname "*espeak-ng*.dll" \) | head -n1 || true)
+                echo "found=$LIB"
+                echo "found=$LIB" >> $GITHUB_OUTPUT
+            
+            - name: Upload espeak-ng native library
+              uses: actions/upload-artifact@v4
+              with:
+                name: natives-${{ runner.os }}
+                path: ${{ steps.findlib.outputs.found }}
+            
+            - name: Upload espeak-ng data folder
+              if: runner.os == 'Linux'
+              uses: actions/upload-artifact@v4
+              with:
+                name: espeak-ng-data
+                path: espeak-ng/espeak-ng-data/**
+        
+    build:
+        runs-on: ubuntu-latest
+        needs: build-natives
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            
+            - name: Clean up native folder in case there are existing files in the repo
+              run: |
+                mkdir -p src/client/resources/native
+                rm -f src/client/resources/native/*.{dll,so,dylib}
+            
+            - name: Download all native artifacts
+              uses: actions/download-artifact@v4
+              with:
+                path: natives
+
+            - name: Merge natives into project
+              run: |
+                find natives -type f ! -path "*/espeak-ng-data/*" -exec cp {} src/client/resources/native/ \;
+                cp -r natives/espeak-ng-data/* src/client/resources/native/espeak-ng-data/
+
+            - name: Building jar
+              run: ./gradlew assemble --no-daemon
+            
+            - name: Filter out the *.sources.jars
+              run: |
+                mkdir -p out
+                for f in build/libs/*.jar; do
+                    if [[ "$f" != *-sources.jar ]]; then
+                        mv "$f" out/
+                    fi
+                done
+            
+            # Uploading ttvoice to artifacts
+            - name: Upload ttvoice to artifacts
+              if: success()
+              uses: actions/upload-artifact@v4
+              with:
+                name: release
+                path: out/*.jar
