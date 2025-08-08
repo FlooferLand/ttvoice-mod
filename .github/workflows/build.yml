@@ -76,8 +76,14 @@ jobs:
                     *) LIB="" ;;
                 esac
 
-                echo "$BASE_LIB:"
-                ls $BASE_LIB
+                echo "-- $BASE_LIB/lib:"
+                ls $BASE_LIB/lib
+
+                echo "-- $BASE_LIB/bin:"
+                ls $BASE_LIB/bin
+
+                echo "-- $BASE_LIB/share:"
+                ls $BASE_LIB/share
 
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
