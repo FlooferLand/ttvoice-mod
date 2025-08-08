@@ -96,7 +96,9 @@ jobs:
             - name: Clean up native folder in case there are existing files in the repo
               run: |
                 mkdir -p src/client/resources/native
-                rm -f src/client/resources/native/*.{dll,so,dylib}
+                rm -f src/client/resources/native/*.dll
+                rm -f src/client/resources/native/*.so
+                rm -f src/client/resources/native/*.dylib
             
             - name: Download all native artifacts
               uses: actions/download-artifact@v4
@@ -107,6 +109,12 @@ jobs:
               run: |
                 find natives -type f ! -path "*/espeak-ng-data/*" -exec cp {} src/client/resources/native/ \;
                 cp -r natives/espeak-ng-data/* src/client/resources/native/espeak-ng-data/
+
+            - name: List native folder for debugging
+              run: ls -R src/client/resources/native
+            
+            - name: Make Gradle wrapper executable (grrr Linux grrrrrr)
+              run: chmod +x ./gradlew
 
             - name: Building jar
               run: ./gradlew assemble --no-daemon
