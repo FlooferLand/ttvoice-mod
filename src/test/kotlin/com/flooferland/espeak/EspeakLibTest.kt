@@ -15,7 +15,7 @@ class EspeakLibTest : FunSpec({
 
     test("speak") {
         var chunkCount = 0
-        Espeak.initialize(Espeak.AudioOutput.Retrieval, 300)
+        Espeak.initialize(Espeak.AudioOutput.Synchronous, 300)
         Espeak.setSynthCallback { wav, numberOfSamples, events ->
             chunkCount += 1
             if (chunkCount != expectedChunks) {

@@ -54,6 +54,35 @@ loom {
 	}
 }
 
+// I have to do this because Java and the jar format are so ancient they can't even list the files a jar contains
+def nativesIndexDir = file("$buildDir/generated/resources")
+def nativesIndexFile = file("$nativesIndexDir/_natives_index.txt")
+tasks.register("generateNativesIndex") {
+	def resourceDir = file("src/client/resources/native")
+
+	inputs.dir(resourceDir)
+	outputs.file(nativesIndexFile)
+
+	doLast {
+		nativesIndexFile.parentFile.mkdirs()
+
+		def files = fileTree(resourceDir).matching { include '**/*' }.files
+		nativesIndexFile.text = files.collect {
+			resourceDir.toPath()
+					.relativize(it.toPath())
+					.toString()
+					.replace('\\', '/')
+		}.join('\n')
+	}
+}
+
+processResources {
+	dependsOn tasks.named('generateNativesIndex')
+	from(nativesIndexDir) {
+		into ''
+	}
+}
+
 // NOTE: Please specify licenses of all the projects used in README.md
 dependencies {
 	minecraft "com.mojang:minecraft:${minecraft_version}"

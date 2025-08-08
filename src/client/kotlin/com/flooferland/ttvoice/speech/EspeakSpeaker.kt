@@ -29,7 +29,7 @@ class EspeakSpeaker : ISpeaker {
     val activeJobs = Collections.synchronizedList(mutableListOf<SpeechJob>())
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
-        val result = Espeak.initialize(Espeak.AudioOutput.Retrieval, BUFFER_SIZE)
+        val result = Espeak.initialize(Espeak.AudioOutput.Synchronous, BUFFER_SIZE)
         if (result.isSuccess) {
             LOGGER.info("Initialized eSpeak-NG v${Espeak.getVersion()}")
             this.context = context

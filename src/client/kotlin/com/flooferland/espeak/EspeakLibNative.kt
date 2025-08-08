@@ -3,14 +3,17 @@
 package com.flooferland.espeak
 
 import com.flooferland.ttvoice.TextToVoiceClient
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.google.common.reflect.ClassPath
 import com.sun.jna.*
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.nio.file.*
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.absolutePathString
 
 
@@ -171,7 +174,6 @@ interface EspeakLibNative : Library {
 
     // Loaded native instance :3
     companion object {
-        const val LIB_NAME = "espeak-ng"
         var instance: EspeakLibNative? = null
 
         val targetNativesDir: Path = if (MinecraftClient.getInstance() != null)
@@ -182,57 +184,47 @@ interface EspeakLibNative : Library {
         val dataDir: Path = targetNativesDir.resolve("espeak-ng-data")
 
         init {
+            val libName = if ("windows" in System.getProperty("os.name").lowercase())
+                "libespeak-ng"
+            else
+                "espeak-ng"
+
             Files.createDirectories(targetNativesDir)
 
-            // Read library as stream
-            val nativesDir = TextToVoiceClient::class.java.getResource("/native")
-            nativesDir?.let {
-                // Copying out all the files
-                val copyResult = runCatching {
-                    extractAll("native/", targetNativesDir)
-                }
-                copyResult.onFailure { err ->
-                    error("$MOD_ID: Failed to load native library, unable to copy to '$targetNativesDir' ($err)")
-                }
+            // Copying out all the files
+            val copyResult = runCatching {
+                val index = this::class.java.getResourceAsStream("/_natives_index.txt")
+                    ?: error("No index file found")
 
-                // Loading the library
-                System.setProperty("jna.library.path", targetNativesDir.absolutePathString())
-                val result = runCatching {
-                    instance = Native.load(LIB_NAME, EspeakLibNative::class.java)
+                val files = String(index.readAllBytes(), StandardCharsets.UTF_8)
+                    .lines().toList()
+                for (file in files) {
+                    var stream = this::class.java.getResourceAsStream("/native/$file")
+                    if (stream == null) {
+                        LOGGER.error("Failed to read stream for file '$file'")
+                        continue
+                    }
+
+                    val path = targetNativesDir.resolve(file)
+                    Files.createDirectories(path.parent)
+                    Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING)
                 }
-                result.onSuccess {
-                    Native.setProtected(true)
-                }
-                result.onFailure {
-                    error("$MOD_ID: Failed to load $LIB_NAME from '$targetNativesDir'. Please try installing espeak-ng manually")
-                }
+                index.close()
             }
-            if (nativesDir == null) {
-                error("$MOD_ID: Failed to load native library, unable to extract jar file contents. Please install espeak-ng manually")
+            copyResult.onFailure { err ->
+                error("$MOD_ID: Failed to load native library, unable to copy to '$targetNativesDir' ($err)")
             }
-        }
 
-        /** Magic function I stole that does something the JVM standard library should really include by default -.- */
-        @Throws(IOException::class)
-        fun extractAll(prefix: String, targetDir: Path) {
-            val loader = this::class.java.getClassLoader()
-            val classPath = ClassPath.from(loader)
-            for (info in classPath.getResources()) {
-                val resourceName = info.getResourceName()
-                if (!resourceName.startsWith(prefix)) continue
-
-                // TODO: Do checksum to see if it's worth extracting and replacing the file or not
-
-                // Strip the prefix/slashes
-                var relPath = resourceName.substring(prefix.length)
-                relPath = relPath.replaceFirst("^/+".toRegex(), "")
-
-                val out = targetDir.resolve(relPath)
-                Files.createDirectories(out.getParent())
-                loader.getResourceAsStream(resourceName).use { stream ->
-                    if (stream == null) throw FileNotFoundException(resourceName)
-                    Files.copy(stream, out, StandardCopyOption.REPLACE_EXISTING)
-                }
+            // Loading the library
+            System.setProperty("jna.library.path", targetNativesDir.absolutePathString())
+            val result = runCatching {
+                instance = Native.load(libName, EspeakLibNative::class.java)
+            }
+            result.onSuccess {
+                Native.setProtected(true)
+            }
+            result.onFailure {
+                error("$MOD_ID: Failed to load $libName from '$targetNativesDir'. Please try installing espeak-ng manually")
             }
         }
     }
