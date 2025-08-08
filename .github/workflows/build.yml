@@ -55,7 +55,6 @@ jobs:
             
             - name: Configure and set up espeak-ng (Linux/macOS)
               if: runner.os != 'Windows'
-              shell: bash -lc
               run: |
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
@@ -66,7 +65,6 @@ jobs:
             # Find espeak-ng
             - name: Finding the built out espeak-ng lib
               id: findlib
-              shell: bash -lc
               run: |
                 cd espeak-ng
                 # candidate names for outputs
