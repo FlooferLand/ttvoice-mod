@@ -50,8 +50,8 @@ jobs:
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
                 mkdir -p build
-                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
+                cmake --install build --prefix ./install
             
             - name: Configure and set up espeak-ng (Linux/macOS)
               if: runner.os != 'Windows'
@@ -59,8 +59,8 @@ jobs:
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
                 mkdir -p build
-                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=./build/libs
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
+                cmake --install build --prefix ./install
 
             # Find espeak-ng
             - name: Finding the built out espeak-ng lib
