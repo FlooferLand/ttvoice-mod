@@ -43,9 +43,19 @@ jobs:
             - name: Setup CMake helper (cross-platform)
               uses: jwlawson/actions-setup-cmake@v2
             
-            # Build and set up espeak-ng
-            - name: Configure and set up espeak-ng
-              shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+            - name: Configure and set up espeak-ng (Windows)
+              if: runner.os == 'Windows'
+              shell: msys2 {0}
+              run: |
+                git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
+                cd espeak-ng
+                mkdir -p build
+                cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+                cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
+            
+            - name: Configure and set up espeak-ng (Linux/macOS)
+              if: runner.os != 'Windows'
+              shell: bash -lc
               run: |
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
