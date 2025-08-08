@@ -76,8 +76,8 @@ jobs:
                     *) LIB="" ;;
                 esac
 
-                echo "install/bin:"
-                ls install/bin/
+                echo "$BASE_LIB:"
+                ls $BASE_LIB
 
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
