@@ -70,11 +70,11 @@ jobs:
               shell: bash
               run: |
                 cd espeak-ng
-                BASE_LIB="install"
+                BASE_LIB="install/lib/espeak-ng"
                 case "$(uname -s)" in
-                    Linux*)  LIB="$BASE_LIB/lib/espeak-ng/libespeak-ng.so" ;;
-                    Darwin*) LIB="$BASE_LIB/lib/espeak-ng/libespeak-ng.dylib" ;;
-                    MINGW*|MSYS*|CYGWIN*) LIB="$BASE_LIB/bin/espeak-ng/espeak-ng.dll" ;;
+                    Linux*)  LIB="$BASE_LIB/libespeak-ng.so" ;;
+                    Darwin*) LIB="$BASE_LIB/libespeak-ng.dylib" ;;
+                    MINGW*|MSYS*|CYGWIN*) LIB="$BASE_LIB/espeak-ng.dll" ;;
                     *) LIB="" ;;
                 esac
 
