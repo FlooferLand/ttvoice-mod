@@ -7,8 +7,7 @@ jobs:
         runs-on: ${{ matrix.runner }}
         strategy:
             matrix:
-                # runner: [ubuntu-latest, macos-latest, windows-latest]
-                runner: [windows-latest]
+                runner: [ubuntu-latest, macos-latest, windows-latest]
         
         steps:
             - name: Checkout
@@ -78,15 +77,6 @@ jobs:
                     *) LIB="" ;;
                 esac
 
-                echo "-- install/lib:"
-                ls install/lib
-
-                echo "-- install/bin:"
-                ls install/bin
-
-                echo "-- install/share:"
-                ls install/share
-
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
                     exit 1
@@ -99,7 +89,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: natives-${{ runner.os }}
-                path: ${{ steps.findlib.outputs.found }}
+                path: espeak-ng/${{ steps.findlib.outputs.found }}
             
             - name: Upload espeak-ng data folder
               if: runner.os == 'Linux'
