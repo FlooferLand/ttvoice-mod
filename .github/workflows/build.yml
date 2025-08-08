@@ -12,6 +12,17 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+
+            - name: Set espeak-ng commit SHA
+              id: espeak-sha
+              run: echo "sha=$(git ls-remote https://github.com/espeak-ng/espeak-ng.git HEAD | cut -f1)" >> $GITHUB_OUTPUT
+
+            - name: Cache espeak-ng
+              uses: actions/cache@v3
+              with:
+                path: espeak-ng/build
+                key: espeak-build-${{ matrix.runner }}-${{ steps.espeak-sha.outputs.sha }}
+                restore-keys: espeak-build-${{ matrix.runner }}-
         
             # Install dependencies
             - name: Install dependencies (Linux)
@@ -19,7 +30,6 @@ jobs:
               run: |
                 sudo apt-get update
                 sudo apt-get install -y build-essential cmake pkg-config libasound2-dev libpulse-dev
-            
             
             - name: Install dependencies (MacOS)
               if: runner.os == 'macOS'
@@ -134,8 +144,16 @@ jobs:
             - name: Setup JDK
               uses: actions/setup-java@v4
               with:
-                java-version: '21'
+                java-version: '17'
                 distribution: 'temurin'
+
+            # This hopefully works?
+            - name: Cache Gradle packages
+              uses: actions/cache@v3
+              with:
+                path: ~/.gradle/caches
+                key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+                restore-keys: gradle-cache-${{ runner.os }}-
 
             - name: Building jar
               run: ./gradlew assemble --no-daemon
