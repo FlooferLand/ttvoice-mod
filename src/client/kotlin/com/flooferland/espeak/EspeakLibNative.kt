@@ -171,7 +171,7 @@ interface EspeakLibNative : Library {
 
     // Loaded native instance :3
     companion object {
-        const val LIB_NAME = "libespeak-ng"
+        const val LIB_NAME = "espeak-ng"
         var instance: EspeakLibNative? = null
 
         val targetNativesDir: Path = if (MinecraftClient.getInstance() != null)
