@@ -69,17 +69,14 @@ jobs:
               run: |
                 cd espeak-ng
                 case "$(uname -s)" in
-                    Linux*)  LIB="build/libs/libespeak-ng.so" ;;
-                    Darwin*) LIB="build/libs/libespeak-ng.dylib" ;;
-                    MINGW*|MSYS*|CYGWIN*) LIB="build/libs/espeak-ng.dll" ;;
+                    Linux*)  LIB="install/bin/libespeak-ng.so" ;;
+                    Darwin*) LIB="install/bin/libespeak-ng.dylib" ;;
+                    MINGW*|MSYS*|CYGWIN*) LIB="install/bin/espeak-ng.dll" ;;
                     *) LIB="" ;;
                 esac
 
-                echo "Builds:"
-                ls build/
-
-                echo "build/libs:"
-                ls build/libs/
+                echo "install/bin:"
+                ls install/bin/
 
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
