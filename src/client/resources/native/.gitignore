@@ -1,0 +1,4 @@
+espeak-ng-data/
+*.dll
+*.so
+*.dylib
