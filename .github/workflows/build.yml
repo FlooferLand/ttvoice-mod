@@ -144,7 +144,7 @@ jobs:
             - name: Setup JDK
               uses: actions/setup-java@v4
               with:
-                java-version: '17'
+                java-version: '21'  # Very odd, but the build fails when using 17?
                 distribution: 'temurin'
 
             # This hopefully works?
