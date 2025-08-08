@@ -45,7 +45,7 @@ jobs:
             
             # Build and set up espeak-ng
             - name: Configure and set up espeak-ng
-              shell: bash -lc
+              shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
               run: |
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
