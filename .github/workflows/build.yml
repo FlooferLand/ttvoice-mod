@@ -61,7 +61,8 @@ jobs:
 
                 # TODO: Consider leaving out -DBUILD_SHARED_LIBS=ON and building cross-platform static library files? (.a)
                 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-                cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
+                cmake --build build --target help
+                # cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
                 cmake --install build --prefix ./install
 
             # Find espeak-ng
@@ -70,22 +71,21 @@ jobs:
               shell: bash
               run: |
                 cd espeak-ng
-                BASE_LIB="install"
                 case "$(uname -s)" in
-                    Linux*)  LIB="$BASE_LIB/lib/libespeak-ng.so" ;;
-                    Darwin*) LIB="$BASE_LIB/lib/libespeak-ng.dylib" ;;
-                    MINGW*|MSYS*|CYGWIN*) LIB="$BASE_LIB/bin/espeak-ng.dll" ;;
+                    Linux*)  LIB="install/lib/libespeak-ng.so" ;;
+                    Darwin*) LIB="install/lib/libespeak-ng.dylib" ;;
+                    MINGW*|MSYS*|CYGWIN*) LIB="install/bin/espeak-ng.dll" ;;
                     *) LIB="" ;;
                 esac
 
-                echo "-- $BASE_LIB/lib:"
-                ls $BASE_LIB/lib
+                echo "-- install/lib:"
+                ls install/lib
 
-                echo "-- $BASE_LIB/bin:"
-                ls $BASE_LIB/bin
+                echo "-- install/bin:"
+                ls install/bin
 
-                echo "-- $BASE_LIB/share:"
-                ls $BASE_LIB/share
+                echo "-- install/share:"
+                ls install/share
 
                 if [ ! -f "$LIB" ]; then
                     echo "libespeak.* not found at expected path: $LIB"
@@ -106,7 +106,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: espeak-ng-data
-                path: espeak-ng/espeak-ng-data/**
+                path: espeak-ng/install/share/espeak-ng-data/**
         
     build:
         runs-on: ubuntu-latest
