@@ -5,7 +5,6 @@ import com.flooferland.ttvoice.screen.SelectDeviceScreen
 import net.minecraft.client.MinecraftClient
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.jetbrains.annotations.CheckReturnValue
 
 public object SpeechUtil {
     private var thread: SpeechThread? = null
@@ -21,7 +20,6 @@ public object SpeechUtil {
         thread = null
     }
 
-    @CheckReturnValue
     fun speak(text: String) {
         thread?.send(SpeechThread.SpeakCommand(text))
         thread?.onError { err ->
@@ -29,7 +27,6 @@ public object SpeechUtil {
             player?.sendMessage(Text.literal("Text-To-Voice Error ${err.type}:\n    ${err.context}").formatted(Formatting.RED))
         }
     }
-
 
     fun shutUp() {
         thread?.send(SpeechThread.ShutUpCommand())
