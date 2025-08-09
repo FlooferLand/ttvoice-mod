@@ -5,11 +5,8 @@ package com.flooferland.espeak
 import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
-import com.google.common.reflect.ClassPath
 import com.sun.jna.*
 import net.minecraft.client.MinecraftClient
-import java.io.FileNotFoundException
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -132,6 +129,15 @@ interface EspeakLibNative : Library {
      *  @param pathData The path to espeak_data
      */
     fun espeak_Info(pathData: Pointer? = null): String?
+
+    /** Reads the voice files from espeak-ng-data/voices and creates an array of espeak_VOICE pointers.
+     *  The list is terminated by a NULL pointer
+     *
+     *  If voice_spec is NULL then all voices are listed.
+     *  If voice spec is given, then only the voices which are compatible with the voice_spec
+     *  are listed, and they are listed in preference order.
+     */
+    fun espeak_ListVoices(voice_spec: Pointer?): Pointer?
 
     // Espeak types
     fun interface SynthCallback : Callback {

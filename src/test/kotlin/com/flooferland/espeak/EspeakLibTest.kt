@@ -31,4 +31,16 @@ class EspeakLibTest : FunSpec({
         println("Total: $chunkCount chunks")
         Espeak.terminate()
     }
+
+    test("list voices") {
+        val result = Espeak.initialize(Espeak.AudioOutput.Synchronous)
+        assertTrue((result.getOrNull() ?: -1) > 1)
+
+        var voices = Espeak.listVoices()
+        for (voice in voices) {
+            println("- Voice: (name=${voice.name}) (lang=${voice.language}) (gender=${voice.gender}) (age=${voice.age})")
+        }
+        assertTrue(voices.isNotEmpty())
+        Espeak.terminate()
+    }
 })
