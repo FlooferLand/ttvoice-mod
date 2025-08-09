@@ -13,7 +13,7 @@ enum class ModKeybinds(translationKey: String, code: InputUtil.Type, category: I
     speakBinding(
         "key.${MOD_ID}.speak",
         InputUtil.Type.KEYSYM,
-        GLFW.GLFW_KEY_H,
+        GLFW.GLFW_KEY_GRAVE_ACCENT,
     );
 
     val bind: KeyBinding = KeyBindingHelper.registerKeyBinding(
