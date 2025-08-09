@@ -12,7 +12,6 @@ interface ISpeaker {
         data class Failure(val type: StatusType, val context: String? = null) : Status
     }
     enum class StatusType {
-        VoiceMuted,
         VoiceDisconnected,
         NoOutputDevice,
         Internal

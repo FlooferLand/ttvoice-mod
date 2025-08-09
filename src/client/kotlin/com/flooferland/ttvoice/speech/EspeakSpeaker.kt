@@ -27,6 +27,7 @@ import javax.sound.sampled.*
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
     val activeJobs = Collections.synchronizedList(mutableListOf<SpeechJob>())
+    val speaking = AtomicBoolean(false)
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
         val result = Espeak.initialize(Espeak.AudioOutput.Synchronous, BUFFER_SIZE)
@@ -74,8 +75,10 @@ class EspeakSpeaker : ISpeaker {
         val speech = SpeechJob(pcm, context)
         speech.start() {
             activeJobs.remove(speech)
+            speaking.set(false)
         }
         activeJobs.add(speech)
+        speaking.set(true)
 
         return Status.Success()
     }
@@ -86,7 +89,7 @@ class EspeakSpeaker : ISpeaker {
     }
 
     override fun isSpeaking(): Boolean {
-        return activeJobs.isNotEmpty()
+        return speaking.get()
     }
 
     class SpeechJob(val pcm: ShortArray, val context: ISpeaker.WorldContext?) {
@@ -116,8 +119,7 @@ class EspeakSpeaker : ISpeaker {
                 val device = deviceResult?.getOrNull()
 
                 while (running.get()) {
-                    val frame = nextFrame()
-                    if (frame == null) break
+                    val frame = nextFrame() ?: break
                     val bytes = pcmAsBytes(frame)
 
                     // Playing through another device (Voicemeeter, etc)
