@@ -139,6 +139,21 @@ interface EspeakLibNative : Library {
      */
     fun espeak_ListVoices(voice_spec: Pointer?): Pointer?
 
+    /** Searches for a voice with a matching "name" field.  Language is not considered.
+     *  "name" is a UTF8 string.
+     *
+     *  Return: EE_OK: operation achieved
+     *          EE_BUFFER_FULL: the command can not be buffered;
+     *            you may try after a while to call the function again.
+     *      EE_INTERNAL_ERROR.
+    */
+    fun espeak_SetVoiceByName(name: String?): Int;
+
+    /** Returns the espeak_VOICE data for the currently selected voice.
+     *  This is not affected by temporary voice changes caused by SSML elements such as <voice> and <s>
+     */
+    fun espeak_GetCurrentVoice(): Pointer?
+
     // Espeak types
     fun interface SynthCallback : Callback {
         /** int SynthCallback(short *wav, int numsamples, espeak_EVENT *events);

@@ -26,15 +26,18 @@ import javax.sound.sampled.*
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
-    val activeJobs = Collections.synchronizedList(mutableListOf<SpeechJob>())
+    val activeJobs: MutableList<SpeechJob> = Collections.synchronizedList(mutableListOf<SpeechJob>())
     val speaking = AtomicBoolean(false)
+    var defaultVoice: String? = null
 
     override fun load(context: ISpeaker.WorldContext?): Result<EspeakSpeaker> {
         val result = Espeak.initialize(Espeak.AudioOutput.Synchronous, BUFFER_SIZE)
         if (result.isSuccess) {
             LOGGER.info("Initialized eSpeak-NG v${Espeak.getVersion()}")
             this.context = context
-            EspeakSpeaker.sampleRate = result.getOrNull()!!
+            sampleRate = result.getOrNull()!!
+            defaultVoice = Espeak.getVoice()?.name
+            SpeechUtil.updateVoice()
             return Result.success(this)
         } else {
             return Result.failure(Error("Error initializing eSpeak-NG v${Espeak.getVersion()}"))
@@ -108,22 +111,31 @@ class EspeakSpeaker : ISpeaker {
                     )
                 }
 
-                val deviceInfo =
+                // Voicemeeter
+                val externalDeviceInfo =
                     if (ModState.config.general.routeThroughDevice) {
                         AudioSystem.getMixerInfo().getOrNull(ModState.config.audio.device)
                     } else {
                         null
                     }
-                val deviceResult = deviceInfo?.let { getDevice(it) }
-                deviceResult?.onFailure(errHandler)
-                val device = deviceResult?.getOrNull()
+                val externalDeviceResult = externalDeviceInfo?.let { getDevice(it) }
+                externalDeviceResult?.onFailure(errHandler)
+                val externalDevice = externalDeviceResult?.getOrNull()
 
+                // Local audio
+                val localDeviceResult = getDevice(null)
+                localDeviceResult.onFailure(errHandler)
+                val localDevice = localDeviceResult.getOrNull()
+
+                // Main loop
                 while (running.get()) {
                     val frame = nextFrame() ?: break
                     val bytes = pcmAsBytes(frame)
 
                     // Playing through another device (Voicemeeter, etc)
-                    device?.write(bytes, 0, bytes.size)
+                    if (ModState.config.general.routeThroughDevice) {
+                        externalDevice?.write(bytes, 0, bytes.size)
+                    }
 
                     // Streaming the data to Simple Voice Chat
                     if (ModState.config.general.routeThroughVoiceChat && VcPlugin.connected && !SpeechUtil.isTestingArmed()) {
@@ -135,6 +147,11 @@ class EspeakSpeaker : ISpeaker {
                         FiguraEventPlugin.sendSpeakingEvent(frame)
                     }
 
+                    // Playing data through main audio device (testing)
+                    if (SpeechUtil.isTestingArmed() && (!VcPlugin.connected || !ModState.config.general.hearSelf)) {
+                        localDevice?.write(bytes, 0, bytes.size)
+                    }
+
                     // Delay
                     val frameDelayNs = (FRAME_MS - FRAME_MS_STITCH) * 1_000_000L
                     val nextFrameTime = (System.nanoTime() + frameDelayNs)
@@ -142,7 +159,8 @@ class EspeakSpeaker : ISpeaker {
                 }
 
                 running.set(false)
-                device?.close()
+                externalDevice?.close()
+                localDevice?.close()
                 endCallback?.invoke()
                 playhead = 0
             }

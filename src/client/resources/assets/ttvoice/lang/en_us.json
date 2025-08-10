@@ -8,7 +8,7 @@
     "config.ttvoice.general": "General",
     "config.ttvoice.general.routeThroughVoiceChat": "Route through SimpleVoiceChat",
     "config.ttvoice.general.routeThroughVoiceChat.tooltip": "Routes TTS audio through the currently used voice chat mod",
-    "config.ttvoice.general.routeThroughDevice": "Route through device",
+    "config.ttvoice.general.routeThroughDevice": "Route output through device",
     "config.ttvoice.general.routeThroughDevice.tooltip": "Routes TTS audio through a sound device (Ex: Voicemeeter)",
     "config.ttvoice.general.hearSelf": "Hear self",
     "config.ttvoice.audio": "Audio",
@@ -17,6 +17,7 @@
     "config.ttvoice.ui": "User Interface",
     "config.ttvoice.ui.sounds": "UI sounds",
     "config.ttvoice.ui.viewHistory": "View speech history",
+    "config.ttvoice.espeakVoice.name": "Voice",
 
     "-- Status": "",
     "status.ttvoice.vc.connected": "Connected to %1$s",

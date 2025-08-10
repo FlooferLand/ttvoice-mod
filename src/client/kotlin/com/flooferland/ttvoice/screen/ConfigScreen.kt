@@ -1,10 +1,12 @@
 package com.flooferland.ttvoice.screen
 
+import com.flooferland.espeak.Espeak
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.data.TextToVoiceConfig.*
 import com.flooferland.ttvoice.registry.ModConfig
+import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.MutVector2Int
 import com.flooferland.ttvoice.util.math.Vector2Int
@@ -18,6 +20,9 @@ import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
+import java.util.Optional
+import kotlin.jvm.optionals.getOrElse
+import kotlin.jvm.optionals.getOrNull
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -31,6 +36,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     lateinit var noticeLabel: TextWidget
     lateinit var currentConfig: TextToVoiceConfig
     lateinit var selectDeviceButton: ButtonWidget
+    lateinit var testButton: ButtonWidget
     var error: Error? = null
         get() = field
         set(value) {
@@ -74,6 +80,11 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     override fun init() {
         currentConfig = ModState.config.clone()
 
+        // Speaker init
+        if (SpeechUtil.isNotInitialized()) {
+            SpeechUtil.load(null)
+        }
+
         run {
             // Back button
             val pad = Vector2Int(10, 5)
@@ -87,16 +98,24 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
             // Save button
             saveButton = ButtonWidget.builder(Text.of("Save"))
-                { saveSettings() }
+            { saveSettings() }
                 .position(pad.x + (size.x + pad.x), height - size.y - pad.y)
                 .size(size.x, size.y)
                 .build()
             saveButton.active = false
             addDrawableChild(saveButton)
 
+            // Audio test button
+            testButton = ButtonWidget.builder(Text.of("Test"))
+            { SpeechUtil.playTest() }
+                .position(pad.x + ((size.x + pad.x) * 2), height - size.y - pad.y)
+                .size(size.x, size.y)
+                .build()
+            addDrawableChild(testButton)
+
             // Error / warning
             noticeLabel = TextWidget(
-                pad.x + (size.x * 2.5).toInt(), height - size.y,
+                pad.x, height - (size.y * 2) - pad.y,
                 500, 20,
                 Text.of(""), textRenderer
             ).alignLeft()
@@ -105,6 +124,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
         // Auto-settings
         autoSettings()
+    }
+
+    override fun removed() {
+        // Un-init speaker if not in a world
+        if (MinecraftClient.getInstance().world == null && SpeechUtil.isInitialized()) {
+            SpeechUtil.unload()
+        }
     }
 
     fun autoSettings() {
@@ -116,11 +142,11 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         val offset = MutVector2Int(10, 40 /* Space for the title */)
         for (categoryProp in TextToVoiceConfig::class.memberProperties) {
             val categoryName = categoryProp.name
-            val categoryValue = categoryProp.get(currentConfig) ?: continue
+            val categoryValue = (categoryProp.get(currentConfig) ?: continue)
 
             for ((i, field) in categoryValue::class.memberProperties.withIndex()) {
                 val fieldName = field.name
-                val fieldInitialValue = (field as KProperty1<Any, *>).get(categoryValue) ?: continue
+                val fieldInitialValue = (field as KProperty1<Any, *>).get(categoryValue)
                 val translationString = "config.${MOD_ID}.${categoryName}.${fieldName}"
                 val labelText = Text.translatable(translationString);
 
@@ -133,7 +159,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 run {
                     // Manually displayed
                     when (fieldName) {
-                        // Audio devices button
+                        // Select audio device button
                         AudioConfig::device.name -> {
                             size = Vector2Int(300, 18)
                             selectDeviceButton = ButtonWidget.Builder(experimentalLabelText)
@@ -149,7 +175,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             return@run
                         }
 
-                        // Audio devices button
+                        // TTS backend cycling button
                         AudioConfig::ttsBackend.name -> {
                             size = Vector2Int(300, 18)
                             val b = CyclingButtonWidget.Builder<TextToVoiceConfig.TTSBackend>()
@@ -168,6 +194,32 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             addWidget(b)
                             return@run
                         }
+
+                        // Voices picker cycling button
+                        VoiceConfig::name.name -> {
+                            size = Vector2Int(300, 18)
+                            val voices = SpeechUtil.getVoices()
+                            var initialVoice = Optional.empty<Espeak.Voice>()
+                            for (voice in voices) {
+                                if ((fieldInitialValue as String?).let { voice.identifier == it || it == null }) {
+                                    initialVoice = Optional.of<Espeak.Voice>(voice)
+                                    break
+                                }
+                            }
+                            val b = CyclingButtonWidget.Builder<Optional<Espeak.Voice>>()
+                            { v -> Text.of(v.getOrNull()?.name ?: "Default") }
+                                .values(voices.map { Optional.of(it) }.plusElement(Optional.empty<Espeak.Voice>()))
+                                .initially(initialVoice)
+                                .build(position.x, position.y, size.x, size.y, labelText)
+                                { b, v ->
+                                    currentConfig.espeakVoice.name = v.getOrNull()?.identifier
+                                    updateMarkDirty()
+                                    SpeechUtil.updateVoice(currentConfig.espeakVoice.name)
+                                    SpeechUtil.playTest()
+                                }
+                            addWidget(b)
+                            return@run
+                        }
                     }
 
                     // Automatically displayed values
@@ -182,11 +234,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                     setSetting(field, categoryValue, on)
                                     if (fieldName == GeneralConfig::routeThroughDevice.name) {
                                         selectDeviceButton.active = on
-                                        if (on) {
-                                            warning = Error("NOTE: The mod might not find your device, as this option is experimental.");
-                                        } else {
-                                            warning = null
-                                        }
                                     }
                                 }
                             }
@@ -231,6 +278,10 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
     fun <T> setSetting(field: KProperty1<Any, T>, categoryValue: Any, value: T) {
         (field as KMutableProperty1<Any, T>).set(categoryValue, value)
+        updateMarkDirty()
+    }
+
+    fun updateMarkDirty() {
         dirty = (!currentConfig.compare(ModState.config))
     }
 

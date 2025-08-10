@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.speech
 
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
@@ -13,8 +14,11 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
     private var errorQueue = LinkedBlockingQueue<(Status.Failure) -> Unit>()
     private var speaker: ISpeaker? = null
 
+    /** Only set after run is called */
+    var defaultVoice: String? = null
+
     interface ICommand
-    data class SpeakCommand(val text: String) : ICommand
+    data class SpeakCommand(val text: String, val monophonic: Boolean = false) : ICommand
     class ShutUpCommand : ICommand
     class StopThreadCommand : ICommand
 
@@ -22,6 +26,9 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
         val backend = spawnBackend().load(context)
         backend.onSuccess { backend ->
             speaker = backend
+            if (speaker is EspeakSpeaker) {
+                defaultVoice = (speaker as EspeakSpeaker).defaultVoice
+            }
         }
         backend.onFailure { err ->
             // TODO: Switch backends if one doesn't work
@@ -33,6 +40,9 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
             val task = queue.take()
             when (task) {
                 is SpeakCommand -> {
+                    if (task.monophonic) {
+                        speaker?.shutUp()
+                    }
                     val status = speak(task.text)
                     if (status is Status.Failure) {
                         emitError(status)
@@ -67,11 +77,6 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
             }
         }
 
-        // Voice chat
-        if (ModState.config.general.routeThroughVoiceChat && !VcPlugin.connected) {
-            return Status.Failure(StatusType.VoiceDisconnected, "Can't play audio while voice chat is disconnected or disabled")
-        }
-
         // No routing warning
         if (!ModState.config.general.let { it.routeThroughVoiceChat || it.routeThroughDevice }) {
             return Status.Failure(StatusType.NoOutputDevice, "No output set. Make sure to route through at least one output in the mod config")
@@ -101,6 +106,7 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
         if (errorQueue.isNotEmpty()) {
             val callback = errorQueue.take()
             callback.invoke(error)
+            LOGGER.error("Error ${error.type} in speech thread: ${error.context}")
         }
     }
 

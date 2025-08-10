@@ -27,7 +27,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
 
     init {
         // Speaker init
-        if (MinecraftClient.getInstance().world == null) {
+        if (SpeechUtil.isNotInitialized()) {
             SpeechUtil.load(null)
         }
     }
@@ -108,8 +108,8 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
     }
 
     override fun removed() {
-        // Speaker uninit
-        if (MinecraftClient.getInstance().world == null) {
+        // Un-init speaker if not in a world
+        if (MinecraftClient.getInstance().world == null && SpeechUtil.isInitialized()) {
             SpeechUtil.unload()
         }
     }

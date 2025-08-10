@@ -6,7 +6,8 @@ import com.moandjiezana.toml.TomlWriter
 data class TextToVoiceConfig(
     var general: GeneralConfig = GeneralConfig(),
     var audio: AudioConfig = AudioConfig(),
-    var ui: UiConfig = UiConfig()
+    var ui: UiConfig = UiConfig(),
+    var espeakVoice: VoiceConfig = VoiceConfig()
 ) {
     // Types
     data class GeneralConfig(
@@ -21,6 +22,9 @@ data class TextToVoiceConfig(
     data class UiConfig(
         var viewHistory: Boolean = true,
         var sounds: Boolean = true
+    )
+    data class VoiceConfig(
+        var name: String? = null
     )
 
     enum class TTSBackend {
