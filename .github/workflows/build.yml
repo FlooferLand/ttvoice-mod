@@ -64,19 +64,17 @@ jobs:
               if: steps.cache-espeak.outputs.cache-hit != 'true'
               uses: jwlawson/actions-setup-cmake@v2
             
-            # Configure stuff
-            - name: Configure and set up espeak-ng (Windows)
+            # Configure and build
+            - name: Configure and set up espeak-ng
               if: steps.cache-espeak.outputs.cache-hit != 'true'
               run: |
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
-
-                ./autogen.sh
-                ./configure --prefix=./install --with-mbrola=yes
+                
                 # TODO: Consider leaving out -DBUILD_SHARED_LIBS=ON and building cross-platform static library files? (.a)
                 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
-                cmake --install build --prefix ./install
+                cmake --install build --prefix ./install --with-mbrola=yes
 
             # Find espeak-ng
             - name: Finding the built out espeak-ng lib
