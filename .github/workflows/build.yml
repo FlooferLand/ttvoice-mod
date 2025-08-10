@@ -1,8 +1,11 @@
-name: Build the mod for Linux, Windows, and MacOS
+name: Build the mod
 on:
     workflow_dispatch
 
 jobs:
+    # TODO: espeak-ng provides separate build steps specific for Windows.
+    #       The Windows version should be built separately, so the end DLL wont contain GNUC compiler things and will be more compatible.
+    #       https://github.com/espeak-ng/espeak-ng/blob/master/docs/building.md#windows
     build-natives:
         runs-on: ${{ matrix.sys.os }}
         strategy:
@@ -68,6 +71,7 @@ jobs:
                 git clone --depth 1 https://github.com/espeak-ng/espeak-ng.git
                 cd espeak-ng
 
+                CC=clang ./configure --with-mbrola=yes
                 # TODO: Consider leaving out -DBUILD_SHARED_LIBS=ON and building cross-platform static library files? (.a)
                 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
                 cmake --build build --config Release -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 2)
