@@ -128,6 +128,7 @@ class EspeakSpeaker : ISpeaker {
                 val localDevice = localDeviceResult.getOrNull()
 
                 // Main loop
+                val frameDelayNs = (FRAME_MS - FRAME_MS_STITCH) * 1_000_000L
                 while (running.get()) {
                     val frame = nextFrame() ?: break
                     val bytes = pcmAsBytes(frame)
@@ -153,7 +154,7 @@ class EspeakSpeaker : ISpeaker {
                     }
 
                     // Delay
-                    val frameDelayNs = (FRAME_MS - FRAME_MS_STITCH) * 1_000_000L
+                    // TODO: Sleep instead of yielding!! Very bad for performance
                     val nextFrameTime = (System.nanoTime() + frameDelayNs)
                     while (System.nanoTime() < nextFrameTime) yield()
                 }
