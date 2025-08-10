@@ -142,8 +142,16 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         val offset = MutVector2Int(10, 40 /* Space for the title */)
         for (categoryProp in TextToVoiceConfig::class.memberProperties) {
             val categoryName = categoryProp.name
-            val categoryValue = (categoryProp.get(currentConfig) ?: continue)
+            var categoryValue = (categoryProp.get(currentConfig) ?: continue)
 
+            // Special redirect for voice config, since the type changes
+            if (categoryValue is VoiceConfig) {
+                when (ModState.config.audio.ttsBackend) {
+                    TTSBackend.Espeak -> categoryValue = categoryValue.espeak
+                }
+            }
+
+            // Loop and populate all the props
             for ((i, field) in categoryValue::class.memberProperties.withIndex()) {
                 val fieldName = field.name
                 val fieldInitialValue = (field as KProperty1<Any, *>).get(categoryValue)
@@ -195,8 +203,12 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             return@run
                         }
 
+                        // --------------------
+                        // -   Voice config   -
+                        // --------------------
+
                         // Voices picker cycling button
-                        VoiceConfig::name.name -> {
+                        VoiceConfig::espeak::name.name -> {
                             size = Vector2Int(300, 18)
                             val voices = SpeechUtil.getVoices()
                             var initialVoice = Optional.empty<Espeak.Voice>()
@@ -212,9 +224,9 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                 .initially(initialVoice)
                                 .build(position.x, position.y, size.x, size.y, labelText)
                                 { b, v ->
-                                    currentConfig.espeakVoice.name = v.getOrNull()?.identifier
+                                    currentConfig.voice.espeak.name = v.getOrNull()?.identifier
                                     updateMarkDirty()
-                                    SpeechUtil.updateVoice(currentConfig.espeakVoice.name)
+                                    SpeechUtil.updateVoice(currentConfig.voice.espeak.name)
                                     SpeechUtil.playTest()
                                 }
                             addWidget(b)

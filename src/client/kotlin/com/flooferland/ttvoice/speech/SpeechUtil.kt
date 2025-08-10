@@ -69,7 +69,7 @@ public object SpeechUtil {
         return thread?.isSpeaking() ?: false
     }
 
-    fun updateVoice(id: String? = ModState.config.espeakVoice.name) {
+    fun updateVoice(id: String? = ModState.config.voice.espeak.name) {
         val voice: String? = id ?: thread?.defaultVoice
         if (voice != null) {
             Espeak.setVoice(voice)

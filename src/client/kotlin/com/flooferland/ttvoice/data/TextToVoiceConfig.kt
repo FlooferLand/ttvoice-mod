@@ -5,9 +5,9 @@ import com.moandjiezana.toml.TomlWriter
 
 data class TextToVoiceConfig(
     var general: GeneralConfig = GeneralConfig(),
+    var voice: VoiceConfig = VoiceConfig(VoiceConfig.Espeak()),
     var audio: AudioConfig = AudioConfig(),
     var ui: UiConfig = UiConfig(),
-    var espeakVoice: VoiceConfig = VoiceConfig()
 ) {
     // Types
     data class GeneralConfig(
@@ -15,6 +15,9 @@ data class TextToVoiceConfig(
         var routeThroughDevice: Boolean = false,
         var hearSelf: Boolean = true,
     )
+    data class VoiceConfig(val espeak: Espeak) {
+        data class Espeak(var name: String? = null)
+    }
     data class AudioConfig(
         var device: Int = -1,
         var ttsBackend: TTSBackend = TTSBackend.Espeak
@@ -22,9 +25,6 @@ data class TextToVoiceConfig(
     data class UiConfig(
         var viewHistory: Boolean = true,
         var sounds: Boolean = true
-    )
-    data class VoiceConfig(
-        var name: String? = null
     )
 
     enum class TTSBackend {
