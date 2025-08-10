@@ -16,8 +16,8 @@
     "config.ttvoice.audio.ttsBackend": "Text-to-speech backend",
     "config.ttvoice.voice": "Voice",
     "config.ttvoice.voice.name": "Voice",
-    "config.ttvoice.ui": "User Interface",
-    "config.ttvoice.ui.sounds": "UI sounds",
+    "config.ttvoice.ui": "UI",
+    "config.ttvoice.ui.sounds": "Feedback sounds",
     "config.ttvoice.ui.viewHistory": "View speech history",
 
     "-- Status": "",
