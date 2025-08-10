@@ -12,8 +12,8 @@ import com.flooferland.ttvoice.util.Extensions.resampleRate
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.text.Text
@@ -128,7 +128,7 @@ class EspeakSpeaker : ISpeaker {
                 val localDevice = localDeviceResult.getOrNull()
 
                 // Main loop
-                val frameDelayNs = (FRAME_MS - FRAME_MS_STITCH) * 1_000_000L
+                val frameDelayMs = (FRAME_MS - FRAME_MS_STITCH).toLong()
                 while (running.get()) {
                     val frame = nextFrame() ?: break
                     val bytes = pcmAsBytes(frame)
@@ -154,9 +154,7 @@ class EspeakSpeaker : ISpeaker {
                     }
 
                     // Delay
-                    // TODO: Sleep instead of yielding!! Very bad for performance
-                    val nextFrameTime = (System.nanoTime() + frameDelayNs)
-                    while (System.nanoTime() < nextFrameTime) yield()
+                    delay(frameDelayMs)
                 }
 
                 running.set(false)
@@ -236,8 +234,8 @@ class EspeakSpeaker : ISpeaker {
         /** How long each frame should last; Must be 20 for SVC to work correctly */
         const val FRAME_MS = 20
 
-        /** Stitch frames to prevent harsh cuts; Should be way less than FRAME_MS */
-        const val FRAME_MS_STITCH = 0
+        /** Stitch frames to prevent harsh cuts due to timing inaccuracies; Should be way less than FRAME_MS */
+        const val FRAME_MS_STITCH = 1
 
         /** The size of one audio chunk */
         const val BUFFER_SIZE = (OUTPUT_SAMPLERATE * FRAME_MS) / 1_000
