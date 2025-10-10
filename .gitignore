@@ -1,3 +1,9 @@
+# Stonecutter
+versions/*/logs/
+versions/*/mods/
+versions/*/src/
+versions/*/build/
+
 # Custom
 venv/**
 

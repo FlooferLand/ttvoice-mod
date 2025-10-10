@@ -255,22 +255,22 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                 }
                             }
 
-                            //? if >=1.21 {
-                            val thing = CheckboxWidget.builder(labelText, textRenderer)
+                            //? if >1.20.1 {
+                            /*val thing = CheckboxWidget.builder(labelText, textRenderer)
                                 .checked(fieldInitialValue as Boolean)
                                 .pos(position.x, position.y)
-                                .callback { checkbox, checked ->
+                                .callback { _, _ ->
                                     onClick()
                                 }
                                 .build()
-                            //?} else {
-                            /*val thing = object : CheckboxWidget(position.x, position.y, size.x, size.y, labelText, fieldInitialValue as Boolean) {
+                            *///?} else {
+                            val thing = object : CheckboxWidget(position.x, position.y, size.x, size.y, labelText, fieldInitialValue as Boolean) {
                                 override fun onClick(mouseX: Double, mouseY: Double) {
                                     super.onClick(mouseX, mouseY)
                                     onClick();
                                 }
                             }
-                            *///?}
+                            //?}
                             addConfigWidget(thing)
                         }
 
@@ -373,11 +373,11 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
-        //? if >=1.21 {
-        renderBackground(context, mouseX, mouseY, delta)
-        //?} else {
-        /*renderBackground(context)
-        *///?}
+        //? if >1.20.1 {
+        /*renderBackground(context, mouseX, mouseY, delta)
+        *///?} else {
+        renderBackground(context)
+        //?}
         context.fillGradient(
             0, 0, width, 30,
             ColorHelper.Argb.getArgb(255, 0, 0, 0),

@@ -8,14 +8,18 @@ plugins {
     id("com.google.devtools.ksp") version "2.2.20-2.0.2"
     id("dev.kikugie.stonecutter")
     id("fabric-loom") version "1.11-SNAPSHOT"
+    id("me.modmuss50.mod-publish-plugin") version "1.0.0"
 }
 
 val minecraft = stonecutter.current.version
+val modVersion = property("mod.version") as String
 group = "com.flooferland"
-version = "${property("mod.version")}"
+version = "${modVersion}+$minecraft"
 base {
-    archivesName.set("${property("mod.id")}-$minecraft")
+    archivesName.set(property("mod.id") as String)
 }
+val isAlpha = "alpha" in modVersion
+val isBeta = "beta" in modVersion
 
 evaluationDependsOnChildren()
 
@@ -23,7 +27,7 @@ repositories {
     mavenCentral()
 
     // Simple Voice Chat
-    maven { url = uri("https://maven.maxhenkel.de/releases") }
+    maven("https://maven.maxhenkel.de/releases")
     maven {
         name = "Modrinth"
         url = uri("https://api.modrinth.com/maven")
@@ -31,23 +35,18 @@ repositories {
     }
 
     // Mod Menu
-    maven { url = uri("https://maven.shedaniel.me/") }
-    maven { url = uri("https://maven.terraformersmc.com/releases/") }
+    maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
+    maven("https://maven.shedaniel.me/")
+    maven("https://maven.terraformersmc.com/releases/")
 
     // Figura
-    maven { url = uri("https://maven.quiltmc.org/repository/release/") }
-    maven {
-        name = "Figura Maven Release"
-        url = uri("https://maven.figuramc.org/releases")
-    }
-    maven {
-        name = "Figura Maven Snapshots"
-        url = uri("https://maven.figuramc.org/snapshots")
-    }
-    maven { url = uri("https://jitpack.io") }
+    maven("https://maven.quiltmc.org/repository/release/")
+    maven("https://maven.figuramc.org/releases") { name = "Figura Maven Release" }
+    maven("https://maven.figuramc.org/snapshots") { name = "Figura Maven Snapshots" }
+    maven("https://jitpack.io")
 
     // Dev Auth
-    maven { url = uri("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1") }
+    maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
 }
 
 loom {
@@ -81,13 +80,15 @@ tasks.register("generateNativesIndex") {
 }
 
 tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     dependsOn("generateNativesIndex")
     from(nativesIndexDir) {
         into("")
     }
 }
 
-fun dep(name: String) = property("deps.${name}")
+fun dep(name: String): String = property("deps.${name}") as String
 dependencies {
     mappings("net.fabricmc:yarn:${dep("yarn_mappings")}:v2")
     minecraft("com.mojang:minecraft:${minecraft}")
@@ -134,15 +135,15 @@ tasks.withType<ProcessResources>().configureEach {
     val fabricLanguageKotlin = "${dep("fabric_language_kotlin")}+kotlin.$kotlinVersion"
     val voiceChatMod = "${minecraft}-${dep("simple_voice_chat")}"
     val properties = mapOf(
-        "minecraft" to minecraft,
+        "minecraft" to dep("minecraft"),
         "version" to version as String,
         "java" to java.toString(),
         "kotlin" to kotlinVersion,
-        "fabric_loader" to dep("fabric_loader") as String,
+        "fabric_loader" to dep("fabric_loader"),
         "fabric_language_kotlin" to fabricLanguageKotlin,
         "voicechat_mod" to voiceChatMod,
-        "mod_menu" to dep("mod_menu") as String,
-        "figura" to dep("figura") as String,
+        "mod_menu" to dep("mod_menu"),
+        "figura" to dep("figura"),
         "archivesName" to base.archivesName.get(),
         "archivesBaseName" to base.archivesName.get()
     )
@@ -164,6 +165,9 @@ java {
     targetCompatibility = java
     sourceCompatibility = java
 }
+tasks.remapSourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
 
 kotlin {
     jvmToolchain(java.ordinal + 1)
@@ -182,4 +186,59 @@ tasks.jar {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+publishMods {
+    // Utils
+    fun versionList(prop: String) = findProperty(prop)?.toString()
+        ?.split(',')
+        ?.map { it.trim() }
+        ?: emptyList()
+
+    // Release
+    val stableMcVersions = versionList("vers.minecraft")
+    displayName.set("Text-To-Voice v$modVersion for ${stableMcVersions.joinToString(", ") }")
+    file.set(tasks.remapJar.get().archiveFile)
+    changelog.set(
+        rootProject.file("changelogs/$modVersion.md")
+            .takeIf { it.exists() }
+            ?.readText()
+            ?: "No changelog provided."
+    )
+    type.set(when {
+        isAlpha -> ALPHA
+        isBeta -> BETA
+        else -> STABLE
+    })
+    modLoaders.add("fabric")
+    // dryRun = true
+
+    val modrinthId = property("mod.modrinthId") as String
+    val modrinthToken = runCatching { System.getenv("tokens.modrinth") }
+        .getOrElse { error("Modrinth publish token wasn't provided") }
+
+    if (modrinthId.isNotBlank() && modrinthToken != null) {
+        modrinth {
+            projectId.set(modrinthId)
+            accessToken.set(modrinthToken)
+            minecraftVersions.addAll(stableMcVersions)
+
+            // TODO: Figure out a nice/safe way to add versions to the dependencies
+            requires {
+                slug.set("fabric-api")
+            }
+            requires {
+                slug.set("fabric-language-kotlin")
+            }
+            requires {
+                slug.set("voicechat")
+            }
+            optional {
+                slug.set("modmenu")
+            }
+            optional {
+                slug.set("figura")
+            }
+        }
+    }
 }

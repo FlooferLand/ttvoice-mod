@@ -115,11 +115,11 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
     }
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        //? if >=1.21 {
-        renderBackground(context, mouseX, mouseY, delta)
-        //?} else {
-        /*renderBackground(context)
-        *///?}
+        //? if >1.20.1 {
+        /*renderBackground(context, mouseX, mouseY, delta)
+        *///?} else {
+        renderBackground(context)
+        //?}
         super.render(context, mouseX, mouseY, delta)
     }
 

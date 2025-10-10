@@ -302,17 +302,17 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     /// Speech history widget
     private abstract class HistoryWidget : EntryListWidget<SpeechScreen.HistoryWidget.Entry> {
         val screen: SpeechScreen
-        //? if >=1.21 {
-        constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int)
+        //? if >1.20.1 {
+        /*constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int)
                 : super(client, width, height, top, bottom) {
             this.screen = screen
         }
-        //?} else {
-        /*constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int, itemHeight: Int)
+        *///?} else {
+        constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int, itemHeight: Int)
                 : super(client, width, height, top, bottom, itemHeight) {
             this.screen = screen
         }
-        *///?}
+        //?}
         private class Entry(val screen: SpeechScreen, val parent: HistoryWidget) : EntryListWidget.Entry<HistoryWidget.Entry>() {
             val widgets: ArrayList<ClickableWidget> = arrayListOf()
             init {
@@ -335,10 +335,10 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             ) {
             }
         }
-        //? if <=1.21 {
-        /*override fun appendNarrations(builder: NarrationMessageBuilder?) {
+        //? if <=1.20.1 {
+        override fun appendNarrations(builder: NarrationMessageBuilder?) {
         }
-        *///?}
+        //?}
     }
 
     enum class RecognizedCommands(val command: String) {

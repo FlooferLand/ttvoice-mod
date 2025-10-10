@@ -25,9 +25,6 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
             return
         }
 
-        val player = MinecraftClient.getInstance().player
-        if (player == null) return
-
         if (ModState.config.general.routeThroughDevice) {
             val devices = AudioSystem.getMixerInfo()
             if (ModState.config.audio.device < devices.size) {
@@ -39,12 +36,12 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
     override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {
     }
 
-    // TODO: Figure out what this did
-    //? if <1.21 {
-    /*override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    // TODO: Figure out what this did and port it to over 1.20.4
+    //? if <1.20.4 {
+    override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
         context!!.drawTextWithShadow(this.textRenderer, message, this.getX(), this.getY(), 16777215 or (MathHelper.ceil(this.alpha * 255.0f) shl 24))
     }
-    *///?}
+    //?}
 
     fun update() {
         val devices = AudioSystem.getMixerInfo()
