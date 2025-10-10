@@ -39,9 +39,12 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
     override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {
     }
 
-    override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    // TODO: Figure out what this did
+    //? if <1.21 {
+    /*override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
         context!!.drawTextWithShadow(this.textRenderer, message, this.getX(), this.getY(), 16777215 or (MathHelper.ceil(this.alpha * 255.0f) shl 24))
     }
+    *///?}
 
     fun update() {
         val devices = AudioSystem.getMixerInfo()

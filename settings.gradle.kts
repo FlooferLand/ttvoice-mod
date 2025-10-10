@@ -25,5 +25,6 @@ stonecutter {
             version(name, mcVersion)
 
         mc("1.20.1")
+        mc("1.21.1")
     }
 }
