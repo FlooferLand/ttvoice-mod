@@ -64,7 +64,7 @@ loom {
 }
 
 // I have to do this because Java and the jar format are so ancient they can't even list the files a jar contains
-val nativesIndexDir = file("$buildDir/generated/resources")
+val nativesIndexDir = file("${layout.buildDirectory}/generated/resources")
 val nativesIndexFile = nativesIndexDir.resolve("_natives_index.txt")
 tasks.register("generateNativesIndex") {
     val resourceDir = file("../../src/client/resources/native")
@@ -180,7 +180,6 @@ tasks.jar {
     }
 }
 
-// TODO: ADD TESTS BACK IN
-/*tasks.test {
+tasks.test {
     useJUnitPlatform()
-}*/
+}
