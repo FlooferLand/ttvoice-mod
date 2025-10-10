@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
 	"id": "ttvoice",
-	"version": "${version}",
+	"version": "$version",
 	"name": "Text to Voice",
-	"description": "Type to speak!",
+	"description": "Type to speak!\nA text-to-speech mod for modern Minecraft that allows you to speak through voice chat mods without having a mic.\nUse commands, or the keybind to activate it.",
 	"authors": ["FlooferLand"],
 	"contact": {
 		"homepage": "https://flooferland.com/",
@@ -26,15 +26,15 @@
 		}
 	],
 	"depends": {
-		"fabricloader": ">=${loader_version}",
-		"minecraft": "~${minecraft_version}",
-		"java": ">=${java_version}",
+		"fabricloader": ">=$fabric_loader",
+		"minecraft": "~$minecraft",
+		"java": ">=$java",
 		"fabric-api": "*",
-		"fabric-language-kotlin": ">=${fabric_kotlin_version}+kotlin.${kotlin_version}",
-		"voicechat": ">=${minecraft_version}-${voicechat_mod_version}"
+		"fabric-language-kotlin": ">=$fabric_language_kotlin",
+		"voicechat": ">=$voicechat_mod"
 	},
 	"suggests": {
-		"modmenu": ">=${mod_menu_version}",
-		"figura": ">=${figura_version}"
+		"modmenu": ">=$mod_menu",
+		"figura": ">=$figura"
 	}
 }

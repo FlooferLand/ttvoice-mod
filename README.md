@@ -21,4 +21,4 @@ The project uses the following libraries:
 - eSpeak-NG [(GPLv3 + 2-clause BSD)](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file#license-information)
 - Mod Menu [(MIT License)](https://github.com/TerraformersMC/ModMenu)
 - *Check the [build.gradle](https://github.com/FlooferLand/ttvoice-mod/blob/main/build.gradle) for any that I might've missed*
-###### **Some packages are included in the output jar for the sake of convenience
+###### **Some packages are included in the output jar for the sake of user convenience
