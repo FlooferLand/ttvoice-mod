@@ -149,7 +149,7 @@ class EspeakSpeaker : ISpeaker {
                     }
 
                     // Playing data through main audio device (testing)
-                    if (SpeechUtil.isTestingArmed() && (!VcPlugin.connected || !ModState.config.general.hearSelf)) {
+                    if (SpeechUtil.isTestingArmed()) {
                         localDevice?.write(bytes, 0, bytes.size)
                     }
 
