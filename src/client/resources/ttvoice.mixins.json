@@ -5,13 +5,5 @@
     "plugin": "com.flooferland.ttvoice.mixin.MixinPlugin",
     "injectors": {
         "defaultRequire": 1
-    },
-    "mixins": [
-        "FiguraAPIManagerMixin",
-        "FiguraDocsManagerMixin",
-        "FiguraEventsAPIMixin",
-        "FiguraGlobalDocsMixin",
-        "RenderEventsAccessor",
-        "SVCSpeakingVisualMixin"
-    ]
+    }
 }

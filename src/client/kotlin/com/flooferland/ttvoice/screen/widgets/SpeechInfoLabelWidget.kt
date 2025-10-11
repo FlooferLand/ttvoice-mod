@@ -2,7 +2,6 @@ package com.flooferland.ttvoice.screen.widgets
 
 import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
-import com.flooferland.ttvoice.registry.ModCommands
 import com.flooferland.ttvoice.screen.SelectDeviceScreen
 import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.SatisfyingNoises
@@ -12,13 +11,14 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.tooltip.Tooltip
 import net.minecraft.client.gui.widget.PressableWidget
+/*? if >1.21.1*/ /*import net.minecraft.client.input.AbstractInput*/
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.MathHelper
 import javax.sound.sampled.AudioSystem
 
 class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRenderer) : PressableWidget(0, 0, 300, 15, Text.of("")) {
-    override fun onPress() {
+    fun onPressed() {
         val error = screen.error
         if (error != null) {
             SatisfyingNoises.playDeny()
@@ -33,15 +33,26 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         }
     }
 
-    override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {
-    }
-
-    // TODO: Figure out what this did and port it to over 1.20.4
-    //? if <1.20.4 {
-    override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    fun render(context: DrawContext?) {
         context!!.drawTextWithShadow(this.textRenderer, message, this.getX(), this.getY(), 16777215 or (MathHelper.ceil(this.alpha * 255.0f) shl 24))
     }
+
+    override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {}
+
+    //? if >1.21.1 {
+    /*override fun onPress(input: AbstractInput?) = onPressed()
+    *///?} else {
+    override fun onPress() = onPressed()
     //?}
+
+
+    //? if <1.20.4 {
+    override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float)
+        = render(context)
+    //?} else {
+    /*override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, deltaTicks: Float)
+        = render(context)
+    *///?}
 
     fun update() {
         val devices = AudioSystem.getMixerInfo()
@@ -49,7 +60,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
 
         if (ModState.config.general.routeThroughDevice) {
             text.append(Text.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}"))
-            tooltip = Tooltip.of(Text.of("Click to change the device"))
+            setTooltip(Tooltip.of(Text.of("Click to change the device")))
         }
         if (ModState.config.general.routeThroughVoiceChat) {
             val connected = (if (VcPlugin.connected) "connected" else "disconnected")
@@ -61,7 +72,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         if (screen.error?.message != null) {
             text = Text.literal(screen.error!!.message!!)
                 .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_RED))
-            tooltip = Tooltip.of(Text.of("Error"))
+            setTooltip(Tooltip.of(Text.of("Error")))
         }
 
         message = text

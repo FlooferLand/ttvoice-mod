@@ -10,7 +10,7 @@ import de.maxhenkel.voicechat.api.events.EventRegistration
 import de.maxhenkel.voicechat.api.events.MergeClientSoundEvent
 import net.minecraft.client.MinecraftClient
 
-class VcPlugin : VoicechatPlugin {
+public class VcPlugin : VoicechatPlugin {
     companion object {
         var api: VoicechatClientApi? = null
         var channel: ClientAudioChannel? = null

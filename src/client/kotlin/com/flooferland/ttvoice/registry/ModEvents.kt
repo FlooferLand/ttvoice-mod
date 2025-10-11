@@ -17,7 +17,7 @@ object ModEvents {
             val player = client.player!!
             SpeechUtil.load(ISpeaker.WorldContext(player, client.world!!))
             if (ModState.config.audio.device == -1 && ModState.config.general.routeThroughDevice) {
-                player.sendMessage(Text.of(noAudioMixerError()))
+                player.sendMessage(Text.of(noAudioMixerError()), false)
                 SatisfyingNoises.playDeny()
             }
         }

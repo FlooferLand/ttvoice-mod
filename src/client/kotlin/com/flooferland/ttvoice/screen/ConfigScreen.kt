@@ -7,6 +7,7 @@ import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.data.TextToVoiceConfig.*
 import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.speech.SpeechUtil
+import com.flooferland.ttvoice.util.ColorUtils
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.MutVector2Int
 import com.flooferland.ttvoice.util.math.Vector2Int
@@ -19,7 +20,6 @@ import net.minecraft.text.HoverEvent
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.util.math.ColorHelper
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.reflect.KMutableProperty1
@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 private val title = Text.translatable("config.${MOD_ID}.title")
-private val WHITE_COLOR: Int = ColorHelper.Argb.getArgb(255, 255, 255, 255)
+private val WHITE_COLOR: Int = ColorUtils.getColor(255, 255, 255, 255)
 
 typealias TabId = String
 
@@ -121,7 +121,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 pad.x, height - (size.y * 2) - pad.y,
                 500, 20,
                 Text.of(""), textRenderer
-            ).alignLeft()
+            )
             addDrawableChild(noticeLabel)
         }
 
@@ -170,7 +170,9 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 var size = Vector2Int(0, 0)
 
                 val experimentalLabelText = labelText.formatted(Formatting.YELLOW)
+                    //? if <1.21.9 {
                     .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Experimental"))))
+                    //?}
 
                 run {
                     // Manually displayed
@@ -278,13 +280,12 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             size = Vector2Int(300, 35)
 
                             val label = TextWidget(offset.x + 5, offset.y, 200, 15, labelText, textRenderer)
-                                .alignLeft()
                             addDrawableChild(label)
                             addConfigWidget(label)
 
                             val tooltip = Text.translatableWithFallback("${translationString}.tooltip", labelText.string)
                             val thing = TextFieldWidget(textRenderer, position.x+1, position.y+15, size.x, 18, Text.of(fieldInitialValue as String))
-                            thing.tooltip = Tooltip.of(tooltip)
+                            thing.setTooltip(Tooltip.of(tooltip))
                             thing.setMaxLength(500)
                             thing.text = fieldInitialValue
                             thing.setChangedListener { v ->
@@ -373,15 +374,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
-        //? if >1.20.1 {
-        /*renderBackground(context, mouseX, mouseY, delta)
-        *///?} else {
+        //? if <1.21 {
         renderBackground(context)
         //?}
         context.fillGradient(
             0, 0, width, 30,
-            ColorHelper.Argb.getArgb(255, 0, 0, 0),
-            ColorHelper.Argb.getArgb(0, 0, 0, 0)
+            ColorUtils.getColor(0, 0, 0, 255),
+            ColorUtils.getColor(0, 0, 0, 0)
         )
         super.render(context, mouseX, mouseY, delta)
     }

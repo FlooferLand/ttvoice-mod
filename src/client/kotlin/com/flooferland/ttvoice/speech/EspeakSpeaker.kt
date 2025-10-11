@@ -219,7 +219,10 @@ class EspeakSpeaker : ISpeaker {
             context?.player?.sendMessage(
                 Text.literal("$MOD_ID error: $text")
                     .formatted(Formatting.RED, Formatting.BOLD, Formatting.UNDERLINE)
+                    //? if <=1.21.1 {
                     .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(details))))
+                    //?}
+                , false
             )
             LOGGER.error("$text ($details)")
             SatisfyingNoises.playDeny()

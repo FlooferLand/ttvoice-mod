@@ -2,6 +2,7 @@ val java = if (stonecutter.eval(stonecutter.current.version, ">=1.20.5"))
     JavaVersion.VERSION_21 else JavaVersion.VERSION_17
 val kotlinVersion = "2.2.20"
 val loader = "fabric"
+var hasFigura = stonecutter.eval(stonecutter.current.version, "<=${property("latest_figura_mc_version")}")
 
 plugins {
     kotlin("jvm") version "2.2.20"
@@ -20,6 +21,10 @@ base {
 }
 val isAlpha = "alpha" in modVersion
 val isBeta = "beta" in modVersion
+
+stonecutter {
+    constants["has_figura"] = hasFigura
+}
 
 evaluationDependsOnChildren()
 
@@ -94,7 +99,7 @@ dependencies {
     minecraft("com.mojang:minecraft:${minecraft}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     if (loader == "fabric") {
-        if (dep("fabric_language_kotlin").toString().split("+")[1] != "kotlin.$kotlinVersion") {
+        if (dep("fabric_language_kotlin").split("+")[1] != "kotlin.$kotlinVersion") {
             error("Fabric Language Kotlin and Kotlin version do not match up")
         }
         modImplementation("net.fabricmc:fabric-loader:${dep("fabric_loader")}")
@@ -112,7 +117,9 @@ dependencies {
     modImplementation("maven.modrinth:simple-voice-chat:$loader-${minecraft}-${dep("simple_voice_chat")}")
             
     // Figura integration
-    compileOnly("org.figuramc:figura-fabric:${dep("figura")}+${minecraft}")
+    if (hasFigura) {
+        compileOnly("org.figuramc:figura-fabric:${dep("figura")}+${minecraft}")
+    }
     compileOnly("com.github.FiguraMC.luaj:luaj-core:${dep("luaj")}")
     compileOnly("com.github.FiguraMC.luaj:luaj-jse:${dep("luaj")}")
     compileOnly("com.neovisionaries:nv-websocket-client:${dep("nv_websocket")}")

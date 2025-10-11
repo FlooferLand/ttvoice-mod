@@ -4,7 +4,7 @@ import com.flooferland.ttvoice.speech.EspeakSpeaker
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
-class AudioScheduler {
+public class AudioScheduler {
     data class TimedFrame(val frame: ShortArray, val timestampNs: Long, var consumed: AtomicBoolean = AtomicBoolean(false))
     var queue = ConcurrentLinkedDeque<TimedFrame>()
     var lastFrameTime = 0L

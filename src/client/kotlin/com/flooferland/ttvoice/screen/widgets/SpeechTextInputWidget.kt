@@ -4,6 +4,7 @@ import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.widget.TextFieldWidget
+/*? if >=1.21.9*/ /*import net.minecraft.client.input.KeyInput*/
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -18,7 +19,12 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
 
     init {
         setMaxLength(256)
+        
+        // TODO: Add syntax highlighting back in
+        //? if <1.21.9 {
         super.setRenderTextProvider() { str, i -> textRenderProvider(str, i).asOrderedText() }
+        //?} else {
+        //?}
     }
 
     fun textRenderProvider(str: String, i: Int): Text {
@@ -45,7 +51,17 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
         return Text.of(str)
     }
 
+    //? if >=1.21.9 {
+    /*override fun keyPressed(input: KeyInput): Boolean {
+        return isKeyPressed(input.keycode, input.scancode, input.modifiers)
+    }
+    *///?} else {
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        return isKeyPressed(keyCode, scanCode, modifiers)
+    }
+    //?}
+
+    fun isKeyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (!isActive()) {
             return false;
         }
@@ -92,7 +108,7 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
                 }
 
                 text = if (clear) ""
-                    else SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
+                else SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
                 screen.updateHistoryWidget(clear)
                 handled = true
                 SatisfyingNoises.playClick(-1f)
@@ -104,7 +120,11 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
         }
 
         if (!handled) {
+            //? if >=1.21.9 {
+            /*handled = super.keyPressed(KeyInput(keyCode, scanCode, modifiers))
+            *///?} else {
             handled = super.keyPressed(keyCode, scanCode, modifiers)
+            //?}
         }
         return handled
     }

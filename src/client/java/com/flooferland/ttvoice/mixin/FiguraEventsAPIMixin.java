@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.mixin;
 
+//? if has_figura {
 import com.flooferland.ttvoice.accessors.FiguraEventsAPIAccess;
 import com.flooferland.ttvoice.figura.FiguraEventPlugin;
 import org.figuramc.figura.lua.LuaWhitelist;
@@ -37,3 +38,4 @@ public class FiguraEventsAPIMixin {
 		return TTS_SPEAK_RAW;
 	}
 }
+//?}

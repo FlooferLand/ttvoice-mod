@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.mixin;
 
+//? if has_figura {
 import com.flooferland.ttvoice.figura.TextToVoiceAPI;
 import org.figuramc.figura.lua.docs.FiguraDocsManager;
 import org.spongepowered.asm.mixin.Final;
@@ -19,3 +20,4 @@ public class FiguraDocsManagerMixin {
 		GLOBAL_CHILDREN.put("ttvoice", List.of(TextToVoiceAPI.class));
 	}
 }
+//?}

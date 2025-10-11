@@ -7,6 +7,7 @@ import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.Vector2Int
 import net.minecraft.client.MinecraftClient
+/*? if >1.21.1*/ /*import net.minecraft.client.gl.RenderPipelines*/
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
@@ -190,6 +191,16 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         context!!.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)
         if (historyTextWidget.visible) {
             val pad = 16
+            //? if >1.21.1 {
+            /*context.fill(
+                RenderPipelines.GUI,
+                pad,
+                historyTextWidget.y - pad,
+                this.width - pad,
+                (height * 0.75).toInt() - pad,
+                -1072689136
+            )
+            *///?} else {
             context.fill(
                 pad,
                 historyTextWidget.y - pad,
@@ -197,7 +208,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 (height * 0.75).toInt() - pad,
                 0,
                 -1072689136
-            )
+            )//?}
         }
         //historyWidget.render(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta)
@@ -317,25 +328,18 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             val widgets: ArrayList<ClickableWidget> = arrayListOf()
             init {
                 for (historyElem in SpeechScreen.history) {
-                    val label = TextWidget(0, 0, parent.width / 2, 20, Text.of(historyElem), screen.textRenderer).alignLeft()
+                    val label = TextWidget(0, 0, parent.width / 2, 20, Text.of(historyElem), screen.textRenderer)
                     widgets.add(label)
                 }
             }
-            override fun render(
-                context: DrawContext,
-                index: Int,
-                y: Int,
-                x: Int,
-                entryWidth: Int,
-                entryHeight: Int,
-                mouseX: Int,
-                mouseY: Int,
-                hovered: Boolean,
-                delta: Float
-            ) {
-            }
+
+            //? if >1.21.1 {
+            /*override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, hovered: Boolean, deltaTicks: Float) {}
+            *///?} else {
+            override fun render(context: DrawContext, index: Int, y: Int, x: Int, entryWidth: Int, entryHeight: Int, mouseX: Int, mouseY: Int, hovered: Boolean, delta: Float) {}
+            //?}
         }
-        //? if <=1.20.1 {
+        //? if <1.20.4 {
         override fun appendNarrations(builder: NarrationMessageBuilder?) {
         }
         //?}

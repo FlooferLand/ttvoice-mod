@@ -79,11 +79,13 @@ object ModCommands {
         ModState.config.audio.device = mixer
         context.source.sendFeedback(
             Text.literal("\nAudio mixer was successfully set to ")
+                //? if <1.21 {
                 .append(
                     Text.literal(mixerInfo[mixer].name)
                         .setStyle(Style.EMPTY.withBold(true)
-                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Device ID $mixer"))))
+                        .withHoverEvent(HoverEvent( HoverEvent.Action.SHOW_TEXT, Text.of("Device ID $mixer"))))
                 )
+                //?}
         )
         return 1
     }
@@ -99,9 +101,11 @@ object ModCommands {
                     .setStyle(
                         Style.EMPTY
                             .withBold(isVoicemeeterOutMixer)
+                            //? if <1.21 {
                             .withColor(if (isVoicemeeterOutMixer) ColorHelper.Argb.getArgb(255, 150, 255, 150) else Colors.WHITE)
                             .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${mixer.description} (Device ID $i)")))
                             .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.MixerSetExact.withParams(i)))
+                            //?}
                     )
             )
             mixerText.append(Text.of("\n"))

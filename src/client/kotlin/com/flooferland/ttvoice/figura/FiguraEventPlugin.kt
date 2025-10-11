@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.figura
 
+//? if has_figura {
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.accessors.FiguraEventsAPIAccess
@@ -12,7 +13,6 @@ import org.figuramc.figura.lua.LuaWhitelist
 import org.figuramc.figura.lua.api.event.LuaEvent
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
-import java.util.Collections
 import kotlin.math.sqrt
 
 @FiguraEventPlugin
@@ -78,3 +78,12 @@ class FiguraEventPlugin : FiguraEvent {
         }
     }
 }
+//?} else {
+/*class FiguraEventPlugin {
+    companion object {
+        fun sendSpeakingEvent(frame: ShortArray = shortArrayOf()) {
+
+        }
+    }
+}
+*///?}

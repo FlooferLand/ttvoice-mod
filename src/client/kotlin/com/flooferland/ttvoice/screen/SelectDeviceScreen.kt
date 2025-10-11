@@ -51,7 +51,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                 20 + backButtonSize.x, bottomHeight,
                 (width * 0.6).toInt(), 20,
                 Text.of("**Test audio might take up to a second to play"), textRenderer
-            ).alignLeft()
+            )
             addDrawableChild(warnLabel)
         }
 

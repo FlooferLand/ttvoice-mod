@@ -35,7 +35,7 @@ public object SpeechUtil {
         thread?.send(SpeechThread.SpeakCommand(text, monophonic))
         thread?.onError { err ->
             val player = MinecraftClient.getInstance().player
-            player?.sendMessage(Text.literal("Text-To-Voice Error ${err.type}:\n    ${err.context}").formatted(Formatting.RED))
+            player?.sendMessage(Text.literal("Text-To-Voice Error ${err.type}:\n    ${err.context}").formatted(Formatting.RED), false)
         }
     }
 

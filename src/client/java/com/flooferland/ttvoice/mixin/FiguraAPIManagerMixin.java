@@ -1,5 +1,6 @@
 package com.flooferland.ttvoice.mixin;
 
+//? if has_figura {
 import com.flooferland.ttvoice.figura.TextToVoiceAPI;
 import org.figuramc.figura.lua.FiguraAPIManager;
 import org.figuramc.figura.lua.FiguraLuaRuntime;
@@ -24,3 +25,4 @@ public class FiguraAPIManagerMixin {
 		API_GETTERS.put("ttvoice", TextToVoiceAPI::new);
 	}
 }
+//?}
