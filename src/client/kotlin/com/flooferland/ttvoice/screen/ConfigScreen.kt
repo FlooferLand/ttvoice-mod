@@ -384,6 +384,10 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         //? if >1.21 {
         /*drawHeaderGradient()
         super.render(context, mouseX, mouseY, delta)
+        *///?} else if >=1.20.4 {
+        /*super.renderBackground(context, mouseX, mouseY, delta)
+        drawHeaderGradient()
+        super.render(context, mouseX, mouseY, delta)
         *///?} else {
         super.renderBackground(context)
         drawHeaderGradient()
