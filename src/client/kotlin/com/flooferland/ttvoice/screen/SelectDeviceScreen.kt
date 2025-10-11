@@ -114,15 +114,6 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
         }
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        //? if >1.20.1 {
-        /*renderBackground(context, mouseX, mouseY, delta)
-        *///?} else {
-        renderBackground(context)
-        //?}
-        super.render(context, mouseX, mouseY, delta)
-    }
-
     override fun resize(client: MinecraftClient, width: Int, height: Int) {
         super.resize(client, width, height)
         updateVisibility()

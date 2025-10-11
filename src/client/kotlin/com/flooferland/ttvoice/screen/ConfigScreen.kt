@@ -280,6 +280,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             size = Vector2Int(300, 35)
 
                             val label = TextWidget(offset.x + 5, offset.y, 200, 15, labelText, textRenderer)
+                                .setTextColor(WHITE_COLOR)
                             addDrawableChild(label)
                             addConfigWidget(label)
 
@@ -373,15 +374,22 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        //? if <1.21 {
-        renderBackground(context)
-        //?}
-        context.fillGradient(
-            0, 0, width, 30,
-            ColorUtils.getColor(0, 0, 0, 255),
-            ColorUtils.getColor(0, 0, 0, 0)
-        )
-        context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
+        fun drawHeaderGradient() =
+            context.fillGradient(
+                0, 0, width, 30,
+                ColorUtils.getColor(0, 0, 0, 255),
+                ColorUtils.getColor(0, 0, 0, 0)
+            )
+
+        //? if >1.21 {
+        /*drawHeaderGradient()
         super.render(context, mouseX, mouseY, delta)
+        *///?} else {
+        super.renderBackground(context)
+        drawHeaderGradient()
+        super.render(context, mouseX, mouseY, delta)
+        //?}
+
+        context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
     }
 }
