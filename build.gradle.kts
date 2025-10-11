@@ -238,7 +238,7 @@ publishMods {
                 slug.set("fabric-language-kotlin")
             }
             requires {
-                slug.set("voicechat")
+                slug.set("simple-voice-chat")
             }
             optional {
                 slug.set("modmenu")
