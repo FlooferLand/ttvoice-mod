@@ -1,7 +1,6 @@
 package com.flooferland.ttvoice.speech
 
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
-import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.speech.ISpeaker.Status
@@ -14,8 +13,12 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
     private var errorQueue = LinkedBlockingQueue<(Status.Failure) -> Unit>()
     private var speaker: ISpeaker? = null
 
+    companion object {
+        public const val DEFAULT_VOICE: String = "gmw\\en-US"
+    }
+
     /** Only set after run is called */
-    var defaultVoice: String? = null
+    var defaultVoice: String = DEFAULT_VOICE
 
     interface ICommand
     data class SpeakCommand(val text: String, val monophonic: Boolean = false) : ICommand
@@ -27,7 +30,7 @@ class SpeechThread(val context: ISpeaker.WorldContext?) : Thread() {
         backend.onSuccess { backend ->
             speaker = backend
             if (speaker is EspeakSpeaker) {
-                defaultVoice = (speaker as EspeakSpeaker).defaultVoice
+                defaultVoice = (speaker as EspeakSpeaker).defaultVoice ?: defaultVoice
             }
         }
         backend.onFailure { err ->

@@ -8,6 +8,7 @@ import com.flooferland.ttvoice.VcPlugin
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.figura.FiguraEventPlugin
 import com.flooferland.ttvoice.speech.ISpeaker.Status
+import com.flooferland.ttvoice.util.Extensions.compatHoverTooltip
 import com.flooferland.ttvoice.util.Extensions.resampleRate
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import kotlinx.coroutines.CoroutineScope
@@ -225,10 +226,8 @@ class EspeakSpeaker : ISpeaker {
             context?.player?.sendMessage(
                 Text.literal("$MOD_ID error: $text")
                     .formatted(Formatting.RED, Formatting.BOLD, Formatting.UNDERLINE)
-                    //? if <=1.21.1 {
-                    .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of(details))))
-                    //?}
-                , false
+                    .compatHoverTooltip(Text.of(details)),
+                false
             )
             LOGGER.error("$text ($details)")
             SatisfyingNoises.playDeny()

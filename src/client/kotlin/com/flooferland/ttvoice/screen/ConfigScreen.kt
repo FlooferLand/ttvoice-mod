@@ -1,11 +1,13 @@
 package com.flooferland.ttvoice.screen
 
 import com.flooferland.espeak.Espeak
+import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.data.TextToVoiceConfig.*
 import com.flooferland.ttvoice.registry.ModConfig
+import com.flooferland.ttvoice.speech.SpeechThread
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.ColorUtils
 import com.flooferland.ttvoice.util.Extensions.compatHoverTooltip
@@ -222,21 +224,25 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                         VoiceConfig::espeak::name.name -> {
                             size = Vector2Int(300, 18)
                             val voices = SpeechUtil.getVoices()
-                            var initialVoice = Optional.empty<Espeak.Voice>()
+                            var initialVoice: Espeak.Voice? = null
                             for (voice in voices) {
-                                if ((fieldInitialValue as String?).let { voice.identifier == it || it == null }) {
-                                    initialVoice = Optional.of<Espeak.Voice>(voice)
+                                if ((fieldInitialValue as String? ?: SpeechThread.DEFAULT_VOICE) == voice.identifier) {
+                                    initialVoice = voice
                                     break
                                 }
                             }
-                            val b = CyclingButtonWidget.Builder<Optional<Espeak.Voice>>()
-                                { v -> Text.of(v.getOrNull()?.name ?: "Default") }
-                                .tooltip { t -> Tooltip.of(Text.of("The TTS voice preset")) }
-                                .values(voices.map { Optional.of(it) }.plusElement(Optional.empty<Espeak.Voice>()))
+                            if (initialVoice == null) {
+                                LOGGER.error("Failed to set initial voice (initialVoice == null)")
+                                break;
+                            }
+                            val b = CyclingButtonWidget.Builder<Espeak.Voice>()
+                                { v -> Text.of(v.name) }
+                                .tooltip { t -> Tooltip.of(Text.of("The TTS voice preset.\n\nShift-click to scroll back.")) }
+                                .values(voices)
                                 .initially(initialVoice)
                                 .build(position.x, position.y, size.x, size.y, labelText)
                                 { b, v ->
-                                    currentConfig.voice.espeak.name = v.getOrNull()?.identifier
+                                    currentConfig.voice.espeak.name = v.identifier
                                     updateMarkDirty()
                                     SpeechUtil.updateVoice(currentConfig.voice.espeak.name)
                                     SpeechUtil.playTest()
