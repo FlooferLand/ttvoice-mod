@@ -14,15 +14,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.ShortBuffer
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.*
+import kotlin.math.abs
+import kotlin.math.max
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
@@ -170,7 +171,7 @@ class EspeakSpeaker : ISpeaker {
         }
 
         fun nextFrame(): ShortArray? {
-            if (playhead > pcm.size || !running.get()) return null
+            if (playhead >= pcm.size || !running.get()) return null
             val end = (playhead + BUFFER_SIZE).coerceAtMost(pcm.size)
             val chunk = pcm.sliceArray(playhead until end)
             playhead += BUFFER_SIZE
@@ -184,10 +185,15 @@ class EspeakSpeaker : ISpeaker {
                 true, false
             )
 
+
             // Finding a line
             val result = runCatching {
                 val info = DataLine.Info(SourceDataLine::class.java, bestFormat)
-                (AudioSystem.getLine(info) as SourceDataLine)
+                if (device == null) {
+                    (AudioSystem.getLine(info) as SourceDataLine)
+                } else {
+                    AudioSystem.getMixer(device).getLine(info) as SourceDataLine
+                }
             }
             result.onFailure { err ->
                 return Result.failure(err)

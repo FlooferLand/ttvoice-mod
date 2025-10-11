@@ -8,9 +8,11 @@ import com.flooferland.ttvoice.data.TextToVoiceConfig.*
 import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.ColorUtils
+import com.flooferland.ttvoice.util.Extensions.compatHoverTooltip
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.MutVector2Int
 import com.flooferland.ttvoice.util.math.Vector2Int
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -27,7 +29,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 private val title = Text.translatable("config.${MOD_ID}.title")
-private val WHITE_COLOR: Int = ColorUtils.getColor(255, 255, 255, 255)
+private val WHITE_COLOR: Int = ColorUtils.getColor(255, 255, 255)
 
 typealias TabId = String
 
@@ -163,16 +165,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
             for ((i, field) in categoryValue::class.memberProperties.withIndex()) {
                 val fieldName = field.name
                 val fieldInitialValue = (field as KProperty1<Any, *>).get(categoryValue)
-                val translationString = "config.${MOD_ID}.${categoryName}.${fieldName}"
-                val labelText = Text.translatable(translationString);
 
                 val position = Vector2Int(offset.x, offset.y)
                 var size = Vector2Int(0, 0)
 
-                val experimentalLabelText = labelText.formatted(Formatting.YELLOW)
-                    //? if <1.21.9 {
-                    .setStyle(Style.EMPTY.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Experimental"))))
-                    //?}
+                val translationString = "config.${MOD_ID}.${categoryName}.${fieldName}"
+                val labelText = Text.translatable(translationString);
+                val experimentalLabelText = labelText.copy().formatted(Formatting.YELLOW)
 
                 run {
                     // Manually displayed
@@ -185,6 +184,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                     saveSettings()
                                     MinecraftClient.getInstance().setScreen(SelectDeviceScreen(this))
                                 }
+                                .tooltip(Tooltip.of(Text.literal("Any TTS audio can be additionally routed through another device, for example your 2nd pair of speakers (or Voicemeeter)\n\nNOTE: This is experimental!\nYou may get an error when selecting a device.").formatted(Formatting.YELLOW)))
                                 .position(position.x, position.y)
                                 .size(size.x, size.y)
                                 .build()
@@ -198,6 +198,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             size = Vector2Int(300, 18)
                             val b = CyclingButtonWidget.Builder<TextToVoiceConfig.TTSBackend>()
                                 { v -> Text.of(v::name.get()) }
+                                .tooltip { t -> Tooltip.of(Text.of("The backend TTS system")) }
                                 .values(TextToVoiceConfig.TTSBackend::entries.get())
                                 .initially(fieldInitialValue as TextToVoiceConfig.TTSBackend)
                                 .build(position.x, position.y, size.x, size.y, labelText)
@@ -229,7 +230,8 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                 }
                             }
                             val b = CyclingButtonWidget.Builder<Optional<Espeak.Voice>>()
-                            { v -> Text.of(v.getOrNull()?.name ?: "Default") }
+                                { v -> Text.of(v.getOrNull()?.name ?: "Default") }
+                                .tooltip { t -> Tooltip.of(Text.of("The TTS voice preset")) }
                                 .values(voices.map { Optional.of(it) }.plusElement(Optional.empty<Espeak.Voice>()))
                                 .initially(initialVoice)
                                 .build(position.x, position.y, size.x, size.y, labelText)
@@ -280,7 +282,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             size = Vector2Int(300, 35)
 
                             val label = TextWidget(offset.x + 5, offset.y, 200, 15, labelText, textRenderer)
-                                .setTextColor(WHITE_COLOR)
                             addDrawableChild(label)
                             addConfigWidget(label)
 
