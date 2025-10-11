@@ -373,7 +373,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
         //? if <1.21 {
         renderBackground(context)
         //?}
@@ -382,6 +381,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
             ColorUtils.getColor(0, 0, 0, 255),
             ColorUtils.getColor(0, 0, 0, 0)
         )
+        context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
         super.render(context, mouseX, mouseY, delta)
     }
 }
