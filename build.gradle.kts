@@ -204,7 +204,7 @@ publishMods {
 
     // Release
     val stableMcVersions = versionList("vers.minecraft")
-    displayName.set("Text-To-Voice v$modVersion for ${stableMcVersions.joinToString(", ") }")
+    displayName.set("$modVersion for ${stableMcVersions.joinToString(", ") }")
     file.set(tasks.remapJar.get().archiveFile)
     changelog.set(
         rootProject.file("changelogs/$modVersion.md")
