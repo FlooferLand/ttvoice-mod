@@ -17,6 +17,7 @@ import com.flooferland.ttvoice.util.math.Vector2Int
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.screen.ConfirmLinkScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.tooltip.Tooltip
 import net.minecraft.client.gui.widget.*
@@ -37,6 +38,7 @@ typealias TabId = String
 
 class ConfigScreen(val parent: Screen) : Screen(title) {
     val widgets = mutableMapOf<TabId, MutableList<ClickableWidget>>()
+    val donationWidgets = mutableListOf<ClickableWidget>()
     var categoryContext: TabId = ""
     var selectedCategory: TabId = ""
     lateinit var saveButton: ButtonWidget
@@ -48,6 +50,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         get() = field
         set(value) {
             field = value
+            donationWidgets.forEach { it.visible = (value == null) }
             if (value != null) {
                 noticeLabel.message = Text.literal(value.message)
                     .setStyle(Style.EMPTY.withFormatting(Formatting.RED, Formatting.BOLD))
@@ -63,6 +66,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         get() = field
         set(value) {
             field = value
+            donationWidgets.forEach { it.visible = (value == null) }
             if (error == null) {
                 if (value != null) {
                     noticeLabel.message = Text.literal(value.message)
@@ -93,15 +97,18 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         }
 
         run {
-            // Back button
             val pad = Vector2Int(10, 5)
-            val size = Vector2Int(60, 25)
-            val backButton = ButtonWidget.builder(Text.of("Back"))
+            val size = Vector2Int(60, 20)
+
+            // Back button
+            run {
+                val backButton = ButtonWidget.builder(Text.of("Back"))
                 { MinecraftClient.getInstance().setScreen(parent) }
-                .position(pad.x, height - size.y - pad.y)
-                .size(size.x, size.y)
-                .build()
-            addDrawableChild(backButton)
+                    .position(pad.x, height - size.y - pad.y)
+                    .size(size.x, size.y)
+                    .build()
+                addDrawableChild(backButton)
+            }
 
             // Save button
             saveButton = ButtonWidget.builder(Text.of("Save"))
@@ -119,6 +126,45 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 .size(size.x, size.y)
                 .build()
             addDrawableChild(testButton)
+
+            // Donate button
+            run {
+                val size = Vector2Int((size.x * 1.7).toInt(), size.y)
+                val pos = Vector2Int(width - size.x - pad.x, height - size.y - pad.y)
+
+                // Tiny buttons
+                val kofiButton = ButtonWidget.builder(Text.of("Ko-Fi"))
+                { ConfirmLinkScreen.open("https://ko-fi.com/FlooferLand", this, true) }
+                    .position(pos.x, pos.y)
+                    .size(size.x / 2, size.y)
+                    .build()
+                addDrawableChild(kofiButton)
+                donationWidgets.add(kofiButton)
+                kofiButton.visible = false
+
+                val patreonButton = ButtonWidget.builder(Text.of("Patreon"))
+                { ConfirmLinkScreen.open("https://patreon.com/FlooferLand", this, true) }
+                    .position(pos.x + (size.x / 2), pos.y)
+                    .size(size.x / 2, size.y)
+                    .build()
+                addDrawableChild(patreonButton)
+                donationWidgets.add(patreonButton)
+                patreonButton.visible = false
+
+                // Main donate button
+                val donateButton = ButtonWidget.builder(Text.literal("♡ Support me"))
+                    { b ->
+                        b.visible = false
+                        kofiButton.visible = true
+                        patreonButton.visible = true
+                    }
+                    .position(pos.x, pos.y)
+                    .size(size.x, size.y)
+                    .build()
+                donateButton.setAlpha(0.5f)
+                addDrawableChild(donateButton)
+                donationWidgets.add(donateButton)
+            }
 
             // Error / warning
             noticeLabel = TextWidget(
