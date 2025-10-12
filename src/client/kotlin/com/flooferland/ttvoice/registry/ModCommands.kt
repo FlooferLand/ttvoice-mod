@@ -3,6 +3,7 @@ package com.flooferland.ttvoice.registry
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.speech.SpeechUtil
+import com.flooferland.ttvoice.util.ColorUtils
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
@@ -27,6 +28,7 @@ object ModCommands {
         Speak("speak"),
         StopSpeaking("stopSpeaking"),
         VoiceSet("voice set"),
+        VoiceSetExact("voice setExact"),
         MixerSet("mixer set"),
         MixerSetExact("mixer setExact");
 
@@ -102,7 +104,7 @@ object ModCommands {
                         Style.EMPTY
                             .withBold(isVoicemeeterOutMixer)
                             //? if <1.21 {
-                            .withColor(if (isVoicemeeterOutMixer) ColorHelper.Argb.getArgb(255, 150, 255, 150) else Colors.WHITE)
+                            .withColor(if (isVoicemeeterOutMixer) ColorUtils.getColorArgb(255, 150, 255, 150) else Colors.WHITE)
                             .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${mixer.description} (Device ID $i)")))
                             .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.MixerSetExact.withParams(i)))
                             //?}
@@ -111,6 +113,27 @@ object ModCommands {
             mixerText.append(Text.of("\n"))
         }
         context.source.sendFeedback(mixerText)
+        return 1
+    }
+
+    fun setVoiceFromList(context: CommandContext<FabricClientCommandSource>): Int {
+        val voiceText = Text.empty()
+        for ((i, voice) in SpeechUtil.getVoices().withIndex()) {
+            voiceText.append(Text.of("- "));
+            voiceText.append(
+                Text.literal(voice.name)
+                    .setStyle(
+                        Style.EMPTY
+                            //? if <1.21 {
+                            .withColor(Colors.WHITE)
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${voice.name} (id=${voice.identifier})")))
+                            .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.VoiceSetExact.withParams(i)))
+                            //?}
+                    )
+            )
+            voiceText.append(Text.of("\n"))
+        }
+        context.source.sendFeedback(voiceText)
         return 1
     }
 
@@ -147,6 +170,23 @@ object ModCommands {
                             .then(
                                 ClientCommandManager.literal(Commands.MixerSet.subcommand)
                                     .executes(ModCommands::setMixerFromList)
+                            )
+                    )
+                    .then(
+                        ClientCommandManager.literal(Commands.VoiceSet.command)
+                            .then(
+                                ClientCommandManager.literal(Commands.VoiceSetExact.subcommand).then(
+                                    argument("voice", integer())
+                                        .executes(ModCommands::setVoice)
+                                        .suggests({ context, builder ->
+                                            val mixers = SpeechUtil.getVoices().mapIndexed { i, voice -> "($i) ${voice.name}" }
+                                            CommandSource.suggestMatching(mixers, builder)
+                                        })
+                                )
+                            )
+                            .then(
+                                ClientCommandManager.literal(Commands.VoiceSet.subcommand)
+                                    .executes(ModCommands::setVoiceFromList)
                             )
                     )
             )

@@ -226,13 +226,16 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             val voices = SpeechUtil.getVoices()
                             var initialVoice: Espeak.Voice? = null
                             for (voice in voices) {
-                                if ((fieldInitialValue as String? ?: SpeechThread.DEFAULT_VOICE) == voice.identifier) {
+                                if (((fieldInitialValue as String?) ?: SpeechThread.DEFAULT_VOICE) == voice.identifier) {
                                     initialVoice = voice
                                     break
                                 }
                             }
+                            if (initialVoice == null && voices.isNotEmpty()) {
+                                initialVoice = voices.first()
+                            }
                             if (initialVoice == null) {
-                                LOGGER.error("Failed to set initial voice (initialVoice == null)")
+                                error = Error("Failed to set initial voice (initialVoice == null)")
                                 break;
                             }
                             val b = CyclingButtonWidget.Builder<Espeak.Voice>()
