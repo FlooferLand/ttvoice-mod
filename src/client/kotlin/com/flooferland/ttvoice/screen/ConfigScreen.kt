@@ -12,6 +12,7 @@ import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.ColorUtils
 import com.flooferland.ttvoice.util.Extensions.compatHoverTooltip
 import com.flooferland.ttvoice.util.SatisfyingNoises
+import com.flooferland.ttvoice.util.Utils
 import com.flooferland.ttvoice.util.math.MutVector2Int
 import com.flooferland.ttvoice.util.math.Vector2Int
 import com.mojang.blaze3d.systems.RenderSystem
@@ -134,7 +135,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
                 // Tiny buttons
                 val kofiButton = ButtonWidget.builder(Text.of("Ko-Fi"))
-                { ConfirmLinkScreen.open("https://ko-fi.com/FlooferLand", this, true) }
+                { Utils.openLink(this, "https://ko-fi.com/FlooferLand") }
                     .position(pos.x, pos.y)
                     .size(size.x / 2, size.y)
                     .build()
@@ -143,7 +144,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 kofiButton.visible = false
 
                 val patreonButton = ButtonWidget.builder(Text.of("Patreon"))
-                { ConfirmLinkScreen.open("https://patreon.com/FlooferLand", this, true) }
+                { Utils.openLink(this, "https://patreon.com/FlooferLand") }
                     .position(pos.x + (size.x / 2), pos.y)
                     .size(size.x / 2, size.y)
                     .build()
