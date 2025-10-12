@@ -223,7 +223,6 @@ publishMods {
     val modrinthId = property("mod.modrinthId") as String
     val modrinthToken = runCatching { System.getenv("tokens.modrinth") }
         .getOrElse { error("Modrinth publish token wasn't provided") }
-
     if (modrinthId.isNotBlank() && modrinthToken != null) {
         modrinth {
             projectId.set(modrinthId)
@@ -231,21 +230,29 @@ publishMods {
             minecraftVersions.addAll(stableMcVersions)
 
             // TODO: Figure out a nice/safe way to add versions to the dependencies
-            requires {
-                slug.set("fabric-api")
-            }
-            requires {
-                slug.set("fabric-language-kotlin")
-            }
-            requires {
-                slug.set("simple-voice-chat")
-            }
-            optional {
-                slug.set("modmenu")
-            }
-            optional {
-                slug.set("figura")
-            }
+            requires { slug.set("fabric-api") }
+            requires { slug.set("fabric-language-kotlin") }
+            requires { slug.set("simple-voice-chat") }
+            optional { slug.set("modmenu") }
+            optional { slug.set("figura") }
+        }
+    }
+
+    val curseforgeId = property("mod.curseforgeId") as String
+    val curseforgeToken = runCatching { System.getenv("tokens.curseforge") }
+        .getOrElse { error("Curseforge publish token wasn't provided") }
+    if (curseforgeId.isNotBlank() && curseforgeToken != null) {
+        curseforge {
+            projectId.set(curseforgeId)
+            accessToken.set(curseforgeToken)
+            minecraftVersions.addAll(stableMcVersions)
+
+            // TODO: Figure out a nice/safe way to add versions to the dependencies
+            requires { slug.set("fabric-api") }
+            requires { slug.set("fabric-language-kotlin") }
+            requires { slug.set("simple-voice-chat") }
+            optional { slug.set("modmenu") }
+            optional { slug.set("figura") }
         }
     }
 }
