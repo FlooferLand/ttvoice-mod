@@ -2,8 +2,8 @@
 
 package com.flooferland.ttvoice.util
 
-import net.minecraft.client.gui.screen.ConfirmLinkScreen
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.ConfirmLinkScreen
+import net.minecraft.client.gui.screens.Screen
 import kotlin.math.roundToInt
 
 object Utils {
@@ -16,11 +16,11 @@ object Utils {
     fun lerp(a: Short, b: Short, t: Double): Short =
         (a + (b - a) * t).roundToInt().toShort()
 
-    fun openLink(parent: Screen?, link: String) {
+    fun openLink(parent: Screen, link: String) {
         //? if >1.20.1 {
-        /*ConfirmLinkScreen.open(parent, link)
+        /*ConfirmLinkScreen.confirmLink(parent, link)
         *///?} else {
-        ConfirmLinkScreen.open(link, parent, true)
+        ConfirmLinkScreen.confirmLink(link, parent, true)
         //?}
     }
 }

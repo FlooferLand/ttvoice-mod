@@ -4,22 +4,17 @@ import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.registry.ModConfig
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.math.Vector2Int
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.client.gui.widget.CyclingButtonWidget
-import net.minecraft.client.gui.widget.TextWidget
-import net.minecraft.text.MutableText
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.client.*
+import net.minecraft.client.gui.components.*
+import net.minecraft.client.gui.screens.*
+import net.minecraft.network.chat.*
 import javax.sound.sampled.AudioSystem
 
 // TODO: Fix bug where resizing the window makes the several button layout no longer show the selected device
 
-class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device select screen")) {
-    val buttons = mutableListOf<ButtonWidget>()
-    lateinit var singleButton: CyclingButtonWidget<Int>
+class SelectDeviceScreen(val parent: Screen) : Screen(Component.literal("Audio device select screen")) {
+    val buttons = mutableListOf<Button>()
+    lateinit var singleButton: CycleButton<Int>
 
     fun getButtonSize(): Vector2Int {
         return Vector2Int((width * 0.95).toInt(), 15)
@@ -38,21 +33,21 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
         // Back button
         val backButtonSize = Vector2Int(50, 20)
         val bottomHeight = (height - (20 + (backButtonSize.y / 2)))
-        val backButton = ButtonWidget.builder(Text.of("Back"))
-            { MinecraftClient.getInstance().setScreen(parent) }
-            .position(10, bottomHeight)
+        val backButton = Button.builder(Component.literal("Back"))
+            { Minecraft.getInstance().setScreen(parent) }
+            .pos(10, bottomHeight)
             .size(backButtonSize.x, backButtonSize.y)
             .build()
-        addDrawableChild(backButton)
+        addRenderableWidget(backButton)
 
         // Temporary info label
         run {
-            val warnLabel = TextWidget(
+            val warnLabel = StringWidget(
                 20 + backButtonSize.x, bottomHeight,
                 (width * 0.6).toInt(), 20,
-                Text.of("**Test audio might take up to a second to play"), textRenderer
+                Component.literal("**Test audio might take up to a second to play"), font
             )
-            addDrawableChild(warnLabel)
+            addRenderableWidget(warnLabel)
         }
 
         // Devices
@@ -69,7 +64,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                         Vector2Int((width / 2) - (buttonSize.x / 2) - pad, pad + (i * (size.y / 2)))
                     else
                         Vector2Int(pad + (width / 2), pad + ((i-1) * (size.y / 2)))
-                val button = ButtonWidget.builder(Text.of(mixer.name))
+                val button = Button.builder(Component.literal(mixer.name))
                     { b ->
                         ModState.config.audio.device = i
                         ModConfig.save()
@@ -78,21 +73,21 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                         SpeechUtil.shutUp()
                         SpeechUtil.playTest()
                     }
-                    .position(position.x, position.y)
+                    .pos(position.x, position.y)
                     .size(size.x, size.y)
                     .build()
-                addDrawableChild(button)
+                addRenderableWidget(button)
                 buttons.add(button)
             }
 
             // Backup in case the screen is too small
-            singleButton = CyclingButtonWidget.builder<Int>()
-                { v -> Text.of(mixers.getOrNull(ModState.config.audio.device)?.name ?: "Unknown") }
-                .values((mixers.size downTo 0).toList())
-                .build(
+            singleButton = CycleButton.builder<Int>()
+                { v -> Component.literal(mixers.getOrNull(ModState.config.audio.device)?.name ?: "Unknown") }
+                .withValues((mixers.size downTo 0).toList())
+                .create(
                     (width / 2)  - (buttonSize.x / 2), height / 2,
                     buttonSize.x, buttonSize.y,
-                    Text.of("Audio output device")
+                    Component.literal("Audio output device")
                 ) { b, v ->
                     ModState.config.audio.device = v
                     ModConfig.save()
@@ -100,7 +95,7 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
                     SpeechUtil.shutUp()
                     SpeechUtil.playTest()
                 }
-            addDrawableChild(singleButton)
+            addRenderableWidget(singleButton)
         }
 
         // Updating
@@ -108,13 +103,13 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
     }
 
     override fun removed() {
-        // Un-init speaker if not in a world
-        if (MinecraftClient.getInstance().world == null && SpeechUtil.isInitialized()) {
+        // Un-init speaker if not in a level
+        if (Minecraft.getInstance().level == null && SpeechUtil.isInitialized()) {
             SpeechUtil.unload()
         }
     }
 
-    override fun resize(client: MinecraftClient, width: Int, height: Int) {
+    override fun resize(client: Minecraft, width: Int, height: Int) {
         super.resize(client, width, height)
         updateVisibility()
     }
@@ -133,11 +128,11 @@ class SelectDeviceScreen(val parent: Screen) : Screen(Text.of("Audio device sele
     fun updateButtonStyles() {
         for ((i, button) in buttons.withIndex()) {
             val selected = (ModState.config.audio.device == i)
-            button.message = MutableText.of(button.message.content)
+            button.message = Component.literal(button.message.string)
                 .setStyle(
                     Style.EMPTY
                         .withBold(selected)
-                        .withUnderline(selected)
+                        .withUnderlined(selected)
                 )
         }
     }

@@ -31,6 +31,9 @@ evaluationDependsOnChildren()
 repositories {
     mavenCentral()
 
+    // Mappings
+    maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
+
     // Simple Voice Chat
     maven("https://maven.maxhenkel.de/releases")
     maven {
@@ -95,7 +98,11 @@ tasks.processResources {
 
 fun dep(name: String): String = property("deps.${name}") as String
 dependencies {
-    mappings("net.fabricmc:yarn:${dep("yarn_mappings")}:v2")
+    @Suppress("UnstableApiUsage")
+    mappings(loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-$minecraft:${dep("parchment")}@zip")
+    })
     minecraft("com.mojang:minecraft:${minecraft}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     if (loader == "fabric") {
@@ -174,6 +181,11 @@ java {
 }
 tasks.remapSourcesJar {
     duplicatesStrategy = DuplicatesStrategy.WARN
+}
+tasks.named<Jar>("sourcesJar") {
+    // Needed, and kind of annoying.
+    // Can lead to bugs where things don't update properly
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 kotlin {

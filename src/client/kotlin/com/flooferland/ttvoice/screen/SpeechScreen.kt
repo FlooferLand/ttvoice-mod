@@ -6,27 +6,25 @@ import com.flooferland.ttvoice.screen.widgets.SpeechTextInputWidget
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.math.Vector2Int
-import net.minecraft.client.MinecraftClient
-/*? if >1.21.1*/ /*import net.minecraft.client.gl.RenderPipelines*/
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
-import net.minecraft.client.gui.widget.*
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.components.*
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import org.joml.Vector2i
 import kotlin.math.max
 
 const val debugDelay = false
 
-class SpeechScreen() : Screen(Text.of("Speech screen")) {
+class SpeechScreen() : Screen(Component.literal("Speech screen")) {
     private lateinit var textBox: SpeechTextInputWidget
-    private lateinit var speakButton: ButtonWidget
-    private lateinit var stopButton: ButtonWidget
-    private lateinit var historyToggleButton: ButtonWidget
+    private lateinit var speakButton: Button
+    private lateinit var stopButton: Button
+    private lateinit var historyToggleButton: Button
     private lateinit var infoLabel: SpeechInfoLabelWidget
-    private lateinit var historyTextWidget: MultilineTextWidget
+    private lateinit var historyTextWidget: MultiLineTextWidget
     var historyPointer: Int
     var error: Error? = null
         get() = field
@@ -49,18 +47,18 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
 
         // History
         run {
-            historyTextWidget = MultilineTextWidget(
-                Text.literal("History"),
-                textRenderer
+            historyTextWidget = MultiLineTextWidget(
+                Component.literal("History"),
+                font
             )
-            this.addDrawableChild(historyTextWidget)
+            this.addRenderableWidget(historyTextWidget)
             updateHistoryWidget()
         }
         /*run {
             val size = Vector2Int((width * 0.5).toInt(), 200)
             historyWidget = HistoryWidget(
                 this,
-                MinecraftClient.getInstance(),
+                Minecraft.getInstance(),
                 size.x, size.y,
                 20, size.y - 30,
                 50
@@ -72,11 +70,11 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         run {
             val baseSize = Vector2Int(70, 30)
             val basePosition = Vector2Int(0, height - 80)
-            val widgets = ArrayList<ClickableWidget>()
+            val widgets = ArrayList<AbstractButton>()
 
             // Speak button
             run {
-                speakButton = ButtonWidget.builder(Text.of("Speak"))
+                speakButton = Button.builder(Component.literal("Speak"))
                     { b -> speakActionTriggered() }
                     .size(baseSize.x, baseSize.y)
                     .build()
@@ -84,7 +82,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             // Stop speaking button
             run {
-                stopButton = ButtonWidget.builder(Text.of("Stop"))
+                stopButton = Button.builder(Component.literal("Stop"))
                     { b -> stopActionTriggered() }
                     .size(baseSize.x, baseSize.y)
                     .build()
@@ -92,7 +90,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             // Toggle history button
             run {
-                historyToggleButton = ButtonWidget.builder(Text.of("Hide history"))
+                historyToggleButton = Button.builder(Component.literal("Hide history"))
                     { b -> setHistoryVisible(!ModState.config.ui.viewHistory) }
                     .size((baseSize.x * 1.3).toInt(), baseSize.y)
                     .build()
@@ -101,7 +99,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             // Info label
             run {
-                infoLabel = SpeechInfoLabelWidget(this, textRenderer)
+                infoLabel = SpeechInfoLabelWidget(this, font)
                 widgets.add(infoLabel)
                 infoLabel.update()
             }
@@ -113,7 +111,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
                 widget.x = offset
                 widget.y = basePosition.y + (if (widget is SpeechInfoLabelWidget) (baseSize.y / 2) else 0 )
                 offset += widget.width + pad
-                addDrawableChild(widget)
+                addRenderableWidget(widget)
             }
         }
 
@@ -122,15 +120,15 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             val size = Vector2Int((width * 0.95).toInt(), 20)
             textBox = SpeechTextInputWidget(
                 this,
-                textRenderer,
+                font,
                 edgePad.x,
                 (height - size.y) - edgePad.y,
                 size.x - edgePad.x,
                 size.y,
-                Text.of("Input text here"),
+                Component.literal("Input text here"),
                 { speakActionTriggered(); }
             )
-            this.addDrawableChild(textBox)
+            addRenderableWidget(textBox)
         }
 
         // Initialization thingies
@@ -141,7 +139,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     fun updateHistoryWidget(clear: Boolean = false) {
         val historyBottomY = (height * 0.75).toInt()
         val historyTopY = (height * 0.1).toInt()
-        val maxRows = ((historyBottomY - historyTextWidget.y) / (textRenderer.fontHeight+2)).coerceAtLeast(1)
+        val maxRows = ((historyBottomY - historyTextWidget.y) / (font.lineHeight+2)).coerceAtLeast(1)
 
         historyScrollMax = max(0, history.size - maxRows)
         historyScroll = historyScroll.coerceIn(0, historyScrollMax)
@@ -150,21 +148,21 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         val sliceStart = (sliceEnd - maxRows).coerceAtLeast(0)
 
         // Setting history text
-        val text = Text.literal("")
+        val text = Component.literal("")
         for (i in sliceStart until sliceEnd) {
             val history = SpeechScreen.history[i]
             val isCurrent = (i == historyPointer) && !clear
             val style = Style.EMPTY
                 .withBold(isCurrent)
-                .withUnderline(isCurrent)
+                .withUnderlined(isCurrent)
             text.append(
-                Text.literal(history)
+                Component.literal(history)
                     .setStyle(style)
             )
             if (isCurrent) {
                 text.append(
-                    Text.literal(" (${i})")
-                        .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_GRAY, Formatting.ITALIC))
+                    Component.literal(" (${i})")
+                        .setStyle(Style.EMPTY.applyFormats(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC))
                 )
             }
             text.append("\n")
@@ -182,18 +180,18 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         ModState.config.ui.viewHistory = visible
         historyTextWidget.visible = visible
         historyToggleButton.message = when (visible) {
-            true -> Text.of("Hide history")
-            false -> Text.of("Show history")
+            true -> Component.literal("Hide history")
+            false -> Component.literal("Show history")
         }
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        context!!.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+        context.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680)
         if (historyTextWidget.visible) {
             val pad = 16
             //? if >1.21.1 {
             /*context.fill(
-                RenderPipelines.GUI,
+                net.minecraft.client.renderer.RenderPipelines.GUI,
                 pad,
                 historyTextWidget.y - pad,
                 this.width - pad,
@@ -215,7 +213,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     }
 
     fun speakActionTriggered() {
-        var text = textBox.text.trim()
+        var text = textBox.value.trim()
         if (text.isEmpty()) {
             SatisfyingNoises.playDeny()
             return
@@ -269,7 +267,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
             }
             if (commandSucceeded) {
                 SatisfyingNoises.playSuccess()
-                if (resetScreen) MinecraftClient.getInstance().setScreen(SpeechScreen());
+                if (resetScreen) Minecraft.getInstance().setScreen(SpeechScreen());
             }
             return
         }
@@ -289,7 +287,7 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
         if (debugDelay) {
             debugTestStart = System.currentTimeMillis()
         } else {
-            MinecraftClient.getInstance().setScreen(null);
+            Minecraft.getInstance().setScreen(null);
         }
         SatisfyingNoises.playConfirm()
     }
@@ -311,38 +309,34 @@ class SpeechScreen() : Screen(Text.of("Speech screen")) {
     }
 
     /// Speech history widget
-    private abstract class HistoryWidget : EntryListWidget<SpeechScreen.HistoryWidget.Entry> {
+    private abstract class HistoryWidget : AbstractSelectionList<SpeechScreen.HistoryWidget.Entry> {
         val screen: SpeechScreen
         //? if >1.20.1 {
-        /*constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int)
+        /*constructor(screen: SpeechScreen, client: Minecraft, width: Int, height: Int, top: Int, bottom: Int)
                 : super(client, width, height, top, bottom) {
             this.screen = screen
         }
         *///?} else {
-        constructor(screen: SpeechScreen, client: MinecraftClient, width: Int, height: Int, top: Int, bottom: Int, itemHeight: Int)
+        constructor(screen: SpeechScreen, client: Minecraft, width: Int, height: Int, top: Int, bottom: Int, itemHeight: Int)
                 : super(client, width, height, top, bottom, itemHeight) {
             this.screen = screen
         }
         //?}
-        private class Entry(val screen: SpeechScreen, val parent: HistoryWidget) : EntryListWidget.Entry<HistoryWidget.Entry>() {
-            val widgets: ArrayList<ClickableWidget> = arrayListOf()
+        private class Entry(screen: SpeechScreen, parent: HistoryWidget) : AbstractSelectionList.Entry<HistoryWidget.Entry>() {
+            val widgets: ArrayList<AbstractWidget> = arrayListOf()
             init {
                 for (historyElem in SpeechScreen.history) {
-                    val label = TextWidget(0, 0, parent.width / 2, 20, Text.of(historyElem), screen.textRenderer)
+                    val label = StringWidget(0, 0, parent.width / 2, 20, Component.literal(historyElem), screen.font)
                     widgets.add(label)
                 }
             }
 
             //? if >1.21.1 {
-            /*override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, hovered: Boolean, deltaTicks: Float) {}
+            /*override fun renderContent(context: GuiGraphics, mouseX: Int, mouseY: Int, hovered: Boolean, deltaTicks: Float) {}
             *///?} else {
-            override fun render(context: DrawContext, index: Int, y: Int, x: Int, entryWidth: Int, entryHeight: Int, mouseX: Int, mouseY: Int, hovered: Boolean, delta: Float) {}
+            override fun render(context: GuiGraphics, index: Int, y: Int, x: Int, entryWidth: Int, entryHeight: Int, mouseX: Int, mouseY: Int, hovered: Boolean, delta: Float) {}
             //?}
         }
-        //? if <1.20.4 {
-        override fun appendNarrations(builder: NarrationMessageBuilder?) {
-        }
-        //?}
     }
 
     enum class RecognizedCommands(val command: String) {

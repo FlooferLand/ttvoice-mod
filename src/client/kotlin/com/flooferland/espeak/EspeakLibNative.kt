@@ -6,7 +6,7 @@ import com.flooferland.ttvoice.TextToVoiceClient
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.sun.jna.*
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -197,7 +197,7 @@ interface EspeakLibNative : Library {
     companion object {
         var instance: EspeakLibNative? = null
 
-        val targetNativesDir: Path = if (MinecraftClient.getInstance() != null)
+        val targetNativesDir: Path = if (Minecraft.getInstance() != null)
             TextToVoiceClient.dataDir.resolve("native")
         else
             Path.of("src/client/resources/native")

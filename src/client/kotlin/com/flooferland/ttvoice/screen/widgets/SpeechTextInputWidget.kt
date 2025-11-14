@@ -2,45 +2,44 @@ package com.flooferland.ttvoice.screen.widgets
 
 import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.SatisfyingNoises
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.gui.widget.TextFieldWidget
-/*? if >=1.21.9*/ /*import net.minecraft.client.input.KeyInput*/
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.components.EditBox
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import org.lwjgl.glfw.GLFW
 
-public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextRenderer, x: Int, y: Int, width: Int, height: Int, text: Text, val actionOnPress: () -> Unit)
-    : TextFieldWidget(textRenderer, x, y, width, height, text)
+public class SpeechTextInputWidget(val screen: SpeechScreen, font: Font, x: Int, y: Int, width: Int, height: Int, text: Component, val actionOnPress: () -> Unit)
+    : EditBox(font, x, y, width, height, text)
 {
-    val errStyle: Style = Style.EMPTY.withFormatting(Formatting.DARK_RED)
-    val cmdStyle: Style = Style.EMPTY.withFormatting(Formatting.BLUE)
-    val cmdArgStyle: Style = Style.EMPTY.withFormatting(Formatting.DARK_GRAY, Formatting.UNDERLINE)
+    val errStyle = Style.EMPTY.applyFormat(ChatFormatting.DARK_RED)!!
+    val cmdStyle = Style.EMPTY.applyFormat(ChatFormatting.BLUE)!!
+    val cmdArgStyle = Style.EMPTY.applyFormats(ChatFormatting.DARK_GRAY, ChatFormatting.UNDERLINE)!!
 
     init {
         setMaxLength(256)
         
-        // TODO: Add syntax highlighting back in
+        // TODO: Add syntax highlighting back in for modern versions
         //? if <1.21.9 {
-        super.setRenderTextProvider() { str, i -> textRenderProvider(str, i).asOrderedText() }
+        super.setFormatter() { str, i -> textRenderProvider(str, i).visualOrderText }
         //?} else {
         //?}
     }
 
-    fun textRenderProvider(str: String, i: Int): Text {
+    fun textRenderProvider(str: String, i: Int): Component {
         // Commands
         if (str.firstOrNull() == '/') {
             val tokens = str.split(' ')
             if (tokens.isEmpty())
-                return Text.of(str)
+                return Component.literal(str)
 
             val commandName = tokens[0].removePrefix("/")
-            val text = Text.literal("/").setStyle(Style.EMPTY.withBold(true))
-            text.append(Text.literal(commandName).setStyle(if (commandName in SpeechScreen.RecognizedCommands.commands()) cmdStyle else errStyle))
+            val text = Component.literal("/").setStyle(Style.EMPTY.withBold(true))
+            text.append(Component.literal(commandName).setStyle(if (commandName in SpeechScreen.RecognizedCommands.commands()) cmdStyle else errStyle))
             for ((i, token) in tokens.withIndex()) {
                 if (i == 0) continue
                 text.append(" ")
-                val tokenText = Text.literal(token)
+                val tokenText = Component.literal(token)
                     .setStyle(cmdArgStyle)
                 text.append(tokenText)
             }
@@ -48,12 +47,12 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
         }
 
         // Normal text
-        return Text.of(str)
+        return Component.literal(str)
     }
 
     //? if >=1.21.9 {
-    /*override fun keyPressed(input: KeyInput): Boolean {
-        return isKeyPressed(input.keycode, input.scancode, input.modifiers)
+    /*override fun keyPressed(input: net.minecraft.client.input.KeyEvent): Boolean {
+        return isKeyPressed(input.key, input.scancode, input.modifiers)
     }
     *///?} else {
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
@@ -70,7 +69,7 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
         var handled = false
         when (keyCode) {
             GLFW.GLFW_KEY_UP -> {
-                if (text == "") {// Unclear
+                if (value == "") {// Unclear
 
                 } else if (screen.historyPointer > 0) {
                     screen.historyPointer -= 1
@@ -83,7 +82,7 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
                     screen.historyScroll = 0
                 }
 
-                text = SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
+                value = SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
                 screen.updateHistoryWidget()
                 handled = true
                 SatisfyingNoises.playClick(1f)
@@ -98,16 +97,16 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
                         screen.historyScroll -= 1
                     }
                 } else { // Clear the text for the most recent entry; easy way for the user to clear the textbox
-                    if (modifiers != 0 || text.isEmpty()) {
+                    if (modifiers != 0 || value.isEmpty()) {
                         screen.historyPointer = 0
                         screen.historyScroll = screen.historyScrollMax
                     } else {
                         clear = true
-                        text = ""
+                        value = ""
                     }
                 }
 
-                text = if (clear) ""
+                value = if (clear) ""
                 else SpeechScreen.history.getOrNull(screen.historyPointer) ?: ""
                 screen.updateHistoryWidget(clear)
                 handled = true
@@ -121,7 +120,7 @@ public class SpeechTextInputWidget(val screen: SpeechScreen, textRenderer: TextR
 
         if (!handled) {
             //? if >=1.21.9 {
-            /*handled = super.keyPressed(KeyInput(keyCode, scanCode, modifiers))
+            /*handled = super.keyPressed(net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers))
             *///?} else {
             handled = super.keyPressed(keyCode, scanCode, modifiers)
             //?}

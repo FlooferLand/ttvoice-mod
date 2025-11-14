@@ -15,16 +15,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.ShortBuffer
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sound.sampled.*
-import kotlin.math.abs
-import kotlin.math.max
 
 class EspeakSpeaker : ISpeaker {
     var context: ISpeaker.WorldContext? = null
@@ -223,10 +220,10 @@ class EspeakSpeaker : ISpeaker {
         }
 
         fun sendError(context: ISpeaker.WorldContext?, text: String, details: String) {
-            context?.player?.sendMessage(
-                Text.literal("$MOD_ID error: $text")
-                    .formatted(Formatting.RED, Formatting.BOLD, Formatting.UNDERLINE)
-                    .compatHoverTooltip(Text.of(details)),
+            context?.player?.displayClientMessage(
+                Component.literal("$MOD_ID error: $text")
+                    .withStyle(ChatFormatting.RED, ChatFormatting.BOLD, ChatFormatting.UNDERLINE)
+                    .compatHoverTooltip(Component.literal(details)),
                 false
             )
             LOGGER.error("$text ($details)")

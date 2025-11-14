@@ -8,7 +8,7 @@ import de.maxhenkel.voicechat.api.audiochannel.ClientAudioChannel
 import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent
 import de.maxhenkel.voicechat.api.events.EventRegistration
 import de.maxhenkel.voicechat.api.events.MergeClientSoundEvent
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft
 
 public class VcPlugin : VoicechatPlugin {
     companion object {
@@ -40,8 +40,8 @@ public class VcPlugin : VoicechatPlugin {
 
         registration.registerEvent(ClientVoicechatConnectionEvent::class.java, { packet ->
             api = packet.voicechat
-            channel = api!!.createStaticAudioChannel(MinecraftClient.getInstance().player!!.uuid)
-            //channel = api!!.createEntityAudioChannel(UUID.randomUUID(), api!!.fromEntity(MinecraftClient.getInstance().player))
+            channel = api!!.createStaticAudioChannel(Minecraft.getInstance().player!!.uuid)
+            //channel = api!!.createEntityAudioChannel(UUID.randomUUID(), api!!.fromEntity(Minecraft.getInstance().player))
         }, 10)
 
         // NOTE: SVC expects 48,000 hz audio at 16 bits mono. (consistent 960 frame size)

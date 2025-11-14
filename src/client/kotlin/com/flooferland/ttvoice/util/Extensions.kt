@@ -1,8 +1,8 @@
 package com.flooferland.ttvoice.util
 
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
 import kotlin.math.roundToInt
 
 object Extensions {
@@ -18,12 +18,10 @@ object Extensions {
         }
     }
 
-    public fun MutableText.compatHoverTooltip(tooltip: Text): MutableText {
-        return this
-            //? if <1.21.9 {
-            .styled { s -> s.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)) }
-            //?} else {
-            /*.styled { s -> s.withHoverEvent(HoverEvent.ShowText(tooltip)) }
-            *///?}
-    }
+    public fun MutableComponent.compatHoverTooltip(tooltip: Component): MutableComponent = this
+        //? if <1.21.9 {
+        .withStyle { s -> s.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)) }
+        //?} else {
+        /*.withStyle { s -> s.withHoverEvent(HoverEvent.ShowText(tooltip)) }
+        *///?}
 }

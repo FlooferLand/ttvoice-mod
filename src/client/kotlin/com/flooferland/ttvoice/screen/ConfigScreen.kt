@@ -15,46 +15,40 @@ import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.Utils
 import com.flooferland.ttvoice.util.math.MutVector2Int
 import com.flooferland.ttvoice.util.math.Vector2Int
-import com.mojang.blaze3d.systems.RenderSystem
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ConfirmLinkScreen
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.tooltip.Tooltip
-import net.minecraft.client.gui.widget.*
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import java.util.Optional
-import kotlin.jvm.optionals.getOrNull
+import net.minecraft.ChatFormatting
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.components.*
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
-private val title = Text.translatable("config.${MOD_ID}.title")
+private val title = Component.translatable("config.${MOD_ID}.title")
 private val WHITE_COLOR: Int = ColorUtils.getColor(255, 255, 255)
 
 typealias TabId = String
 
 class ConfigScreen(val parent: Screen) : Screen(title) {
-    val widgets = mutableMapOf<TabId, MutableList<ClickableWidget>>()
-    val donationWidgets = mutableListOf<ClickableWidget>()
+    val widgets = mutableMapOf<TabId, MutableList<AbstractWidget>>()
+    val donationWidgets = mutableListOf<AbstractButton>()
     var categoryContext: TabId = ""
     var selectedCategory: TabId = ""
-    lateinit var saveButton: ButtonWidget
-    lateinit var noticeLabel: TextWidget
+    lateinit var saveButton: Button
+    lateinit var noticeLabel: StringWidget
     lateinit var currentConfig: TextToVoiceConfig
-    lateinit var selectDeviceButton: ButtonWidget
-    lateinit var testButton: ButtonWidget
+    lateinit var selectDeviceButton: Button
+    lateinit var testButton: Button
     var error: Error? = null
         get() = field
         set(value) {
             field = value
             donationWidgets.forEach { it.visible = (value == null) }
             if (value != null) {
-                noticeLabel.message = Text.literal(value.message)
-                    .setStyle(Style.EMPTY.withFormatting(Formatting.RED, Formatting.BOLD))
+                noticeLabel.message = Component.literal(value.message.orEmpty())
+                    .setStyle(Style.EMPTY.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD))
                 noticeLabel.visible = true
                 saveButton.active = false
             } else {
@@ -70,8 +64,8 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
             donationWidgets.forEach { it.visible = (value == null) }
             if (error == null) {
                 if (value != null) {
-                    noticeLabel.message = Text.literal(value.message)
-                        .setStyle(Style.EMPTY.withFormatting(Formatting.YELLOW, Formatting.BOLD))
+                    noticeLabel.message = Component.literal(value.message)
+                        .setStyle(Style.EMPTY.applyFormats(ChatFormatting.YELLOW, ChatFormatting.BOLD))
                     noticeLabel.visible = true
                 } else {
                     noticeLabel.visible = false
@@ -103,30 +97,30 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
             // Back button
             run {
-                val backButton = ButtonWidget.builder(Text.of("Back"))
-                { MinecraftClient.getInstance().setScreen(parent) }
-                    .position(pad.x, height - size.y - pad.y)
+                val backButton = Button.builder(Component.literal("Back"))
+                { Minecraft.getInstance().setScreen(parent) }
+                    .pos(pad.x, height - size.y - pad.y)
                     .size(size.x, size.y)
                     .build()
-                addDrawableChild(backButton)
+                addRenderableWidget(backButton)
             }
 
             // Save button
-            saveButton = ButtonWidget.builder(Text.of("Save"))
+            saveButton = Button.builder(Component.literal("Save"))
             { saveSettings() }
-                .position(pad.x + (size.x + pad.x), height - size.y - pad.y)
+                .pos(pad.x + (size.x + pad.x), height - size.y - pad.y)
                 .size(size.x, size.y)
                 .build()
             saveButton.active = false
-            addDrawableChild(saveButton)
+            addRenderableWidget(saveButton)
 
             // Audio test button
-            testButton = ButtonWidget.builder(Text.of("Test"))
+            testButton = Button.builder(Component.literal("Test"))
             { SpeechUtil.playTest() }
-                .position(pad.x + ((size.x + pad.x) * 2), height - size.y - pad.y)
+                .pos(pad.x + ((size.x + pad.x) * 2), height - size.y - pad.y)
                 .size(size.x, size.y)
                 .build()
-            addDrawableChild(testButton)
+            addRenderableWidget(testButton)
 
             // Donate button
             run {
@@ -134,46 +128,46 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 val pos = Vector2Int(width - size.x - pad.x, height - size.y - pad.y)
 
                 // Tiny buttons
-                val kofiButton = ButtonWidget.builder(Text.of("Ko-Fi"))
+                val kofiButton = Button.builder(Component.literal("Ko-Fi"))
                 { Utils.openLink(this, "https://ko-fi.com/FlooferLand") }
-                    .position(pos.x, pos.y)
+                    .pos(pos.x, pos.y)
                     .size(size.x / 2, size.y)
                     .build()
-                addDrawableChild(kofiButton)
+                addRenderableWidget(kofiButton)
                 donationWidgets.add(kofiButton)
                 kofiButton.visible = false
 
-                val patreonButton = ButtonWidget.builder(Text.of("Patreon"))
+                val patreonButton = Button.builder(Component.literal("Patreon"))
                 { Utils.openLink(this, "https://patreon.com/FlooferLand") }
-                    .position(pos.x + (size.x / 2), pos.y)
+                    .pos(pos.x + (size.x / 2), pos.y)
                     .size(size.x / 2, size.y)
                     .build()
-                addDrawableChild(patreonButton)
+                addRenderableWidget(patreonButton)
                 donationWidgets.add(patreonButton)
                 patreonButton.visible = false
 
                 // Main donate button
-                val donateButton = ButtonWidget.builder(Text.literal("♡ Support me"))
+                val donateButton = Button.builder(Component.literal("♡ Support me"))
                     { b ->
                         b.visible = false
                         kofiButton.visible = true
                         patreonButton.visible = true
                     }
-                    .position(pos.x, pos.y)
+                    .pos(pos.x, pos.y)
                     .size(size.x, size.y)
                     .build()
                 donateButton.setAlpha(0.5f)
-                addDrawableChild(donateButton)
+                addRenderableWidget(donateButton)
                 donationWidgets.add(donateButton)
             }
 
             // Error / warning
-            noticeLabel = TextWidget(
+            noticeLabel = StringWidget(
                 pad.x, height - (size.y * 2) - pad.y,
                 500, 20,
-                Text.of(""), textRenderer
+                Component.literal(""), font
             )
-            addDrawableChild(noticeLabel)
+            addRenderableWidget(noticeLabel)
         }
 
         // Auto-settings
@@ -182,7 +176,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
     override fun removed() {
         // Un-init speaker if not in a world
-        if (MinecraftClient.getInstance().world == null && SpeechUtil.isInitialized()) {
+        if (Minecraft.getInstance().level == null && SpeechUtil.isInitialized()) {
             SpeechUtil.unload()
         }
     }
@@ -190,7 +184,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
     fun autoSettings() {
         for (array in widgets.values) {
             for (widget in array) {
-                remove(widget)
+                removeWidget(widget)
             }
         }
         widgets.clear()
@@ -219,8 +213,8 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 var size = Vector2Int(0, 0)
 
                 val translationString = "config.${MOD_ID}.${categoryName}.${fieldName}"
-                val labelText = Text.translatable(translationString);
-                val experimentalLabelText = labelText.copy().formatted(Formatting.YELLOW)
+                val labelText = Component.translatable(translationString);
+                val experimentalLabelText = labelText.copy().withStyle(ChatFormatting.YELLOW)
 
                 run {
                     // Manually displayed
@@ -228,13 +222,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                         // Select audio device button
                         AudioConfig::device.name -> {
                             size = Vector2Int(300, 18)
-                            selectDeviceButton = ButtonWidget.Builder(experimentalLabelText)
+                            selectDeviceButton = Button.Builder(experimentalLabelText)
                                 {
                                     saveSettings()
-                                    MinecraftClient.getInstance().setScreen(SelectDeviceScreen(this))
+                                    Minecraft.getInstance().setScreen(SelectDeviceScreen(this))
                                 }
-                                .tooltip(Tooltip.of(Text.literal("Any TTS audio can be additionally routed through another device, for example your 2nd pair of speakers (or Voicemeeter)\n\nNOTE: This is experimental!\nYou may get an error when selecting a device.").formatted(Formatting.YELLOW)))
-                                .position(position.x, position.y)
+                                .tooltip(Tooltip.create(Component.literal("Any TTS audio can be additionally routed through another device, for example your 2nd pair of speakers (or Voicemeeter)\n\nNOTE: This is experimental!\nYou may get an error when selecting a device.").withStyle(ChatFormatting.YELLOW)))
+                                .pos(position.x, position.y)
                                 .size(size.x, size.y)
                                 .build()
                             selectDeviceButton.active = ModState.config.general.routeThroughDevice
@@ -245,12 +239,12 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                         // TTS backend cycling button
                         AudioConfig::ttsBackend.name -> {
                             size = Vector2Int(300, 18)
-                            val b = CyclingButtonWidget.Builder<TextToVoiceConfig.TTSBackend>()
-                                { v -> Text.of(v::name.get()) }
-                                .tooltip { t -> Tooltip.of(Text.of("The backend TTS system")) }
-                                .values(TextToVoiceConfig.TTSBackend::entries.get())
-                                .initially(fieldInitialValue as TextToVoiceConfig.TTSBackend)
-                                .build(position.x, position.y, size.x, size.y, labelText)
+                            val b = CycleButton.Builder<TextToVoiceConfig.TTSBackend>()
+                                { v -> Component.literal(v::name.get()) }
+                                .withTooltip { t -> Tooltip.create(Component.literal("The backend TTS system")) }
+                                .withValues(TextToVoiceConfig.TTSBackend::entries.get())
+                                .withInitialValue(fieldInitialValue as TextToVoiceConfig.TTSBackend)
+                                .create(position.x, position.y, size.x, size.y, labelText)
                                 { b, v ->
                                     /*if (v == TextToVoiceConfig.TTSBackend.Lua) {
                                         warning = Error("Lua backend requires custom configuration. See the mod page")
@@ -278,19 +272,19 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                                     break
                                 }
                             }
-                            if (initialVoice == null && voices.isNotEmpty()) {
-                                initialVoice = voices.first()
+                            if (initialVoice == null) {
+                                initialVoice = voices.firstOrNull()
                             }
                             if (initialVoice == null) {
-                                error = Error("Failed to set initial voice (initialVoice == null)")
+                                error = Error("Native call failed. Make sure you're using the right Java version (initialVoice == null)")
                                 break;
                             }
-                            val b = CyclingButtonWidget.Builder<Espeak.Voice>()
-                                { v -> Text.of(v.name) }
-                                .tooltip { t -> Tooltip.of(Text.of("The TTS voice preset.\n\nShift-click to scroll back.")) }
-                                .values(voices)
-                                .initially(initialVoice)
-                                .build(position.x, position.y, size.x, size.y, labelText)
+                            val b = CycleButton.Builder<Espeak.Voice>()
+                                { v -> Component.literal(v.name) }
+                                .withTooltip { t -> Tooltip.create(Component.literal("The TTS voice preset.\n\nShift-click to scroll back.")) }
+                                .withValues(voices)
+                                .withInitialValue(initialVoice)
+                                .create(position.x, position.y, size.x, size.y, labelText)
                                 { b, v ->
                                     currentConfig.voice.espeak.name = v.identifier
                                     updateMarkDirty()
@@ -316,15 +310,13 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                             }
 
                             //? if >1.20.1 {
-                            /*val thing = CheckboxWidget.builder(labelText, textRenderer)
-                                .checked(fieldInitialValue as Boolean)
+                            /*val thing = Checkbox.builder(labelText, font)
+                                .selected(fieldInitialValue as Boolean)
                                 .pos(position.x, position.y)
-                                .callback { _, _ ->
-                                    onClick()
-                                }
+                                .onValueChange { _, _ -> onClick() }
                                 .build()
                             *///?} else {
-                            val thing = object : CheckboxWidget(position.x, position.y, size.x, size.y, labelText, fieldInitialValue as Boolean) {
+                            val thing = object : Checkbox(position.x, position.y, size.x, size.y, labelText, fieldInitialValue as Boolean) {
                                 override fun onClick(mouseX: Double, mouseY: Double) {
                                     super.onClick(mouseX, mouseY)
                                     onClick();
@@ -337,16 +329,16 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                         String::class -> {
                             size = Vector2Int(300, 35)
 
-                            val label = TextWidget(offset.x + 5, offset.y, 200, 15, labelText, textRenderer)
-                            addDrawableChild(label)
+                            val label = StringWidget(offset.x + 5, offset.y, 200, 15, labelText, font)
+                            addRenderableWidget(label)
                             addConfigWidget(label)
 
-                            val tooltip = Text.translatableWithFallback("${translationString}.tooltip", labelText.string)
-                            val thing = TextFieldWidget(textRenderer, position.x+1, position.y+15, size.x, 18, Text.of(fieldInitialValue as String))
-                            thing.setTooltip(Tooltip.of(tooltip))
+                            val tooltip = Component.translatableWithFallback("${translationString}.tooltip", labelText.string)
+                            val thing = EditBox(font, position.x+1, position.y+15, size.x, 18, Component.literal(fieldInitialValue as String))
+                            thing.setTooltip(Tooltip.create(tooltip))
                             thing.setMaxLength(500)
-                            thing.text = fieldInitialValue
-                            thing.setChangedListener { v ->
+                            thing.value = fieldInitialValue
+                            thing.setResponder { v ->
                                 setSetting(field, categoryValue, v)
                             }
                             addConfigWidget(thing)
@@ -379,9 +371,9 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         if (width < minWidth) {
             size = Vector2Int(targetButtonSize.x - ((minWidth - width) * 0.25).toInt(), targetButtonSize.y)
         }
-        val tabButtons = mutableListOf<ClickableWidget>()
+        val tabButtons = mutableListOf<AbstractButton>()
         for (id in widgets.keys) {
-            val button = ButtonWidget.builder(Text.translatable("config.$MOD_ID.$id"))
+            val button = Button.builder(Component.translatable("config.$MOD_ID.$id"))
                 { b ->
                     selectedCategory = id
 
@@ -395,19 +387,19 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                         }
                     }
                 }
-                .position(xOffset, 5)
+                .pos(xOffset, 5)
                 .size(size.x, size.y)
                 .build()
             button.setAlpha(if (id == selectedCategory) 1.0f else 0.6f)
-            addDrawableChild(button)
+            addRenderableWidget(button)
             tabButtons.add(button)
             xOffset += size.x + xPad
         }
     }
 
-    fun addConfigWidget(widget: ClickableWidget) {
+    fun addConfigWidget(widget: AbstractWidget) {
         widgets[categoryContext]?.add(widget)
-        addDrawableChild(widget)
+        addRenderableWidget(widget)
     }
 
     fun <T> setSetting(field: KProperty1<Any, T>, categoryValue: Any, value: T) {
@@ -426,11 +418,11 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         saveButton.active = false
     }
 
-    override fun resize(client: MinecraftClient, width: Int, height: Int) {
+    override fun resize(client: Minecraft, width: Int, height: Int) {
         super.resize(client, width, height)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         fun drawHeaderGradient() =
             context.fillGradient(
                 0, 0, width, 30,
@@ -451,6 +443,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         super.render(context, mouseX, mouseY, delta)
         //?}
 
-        context.drawTextWithShadow(textRenderer, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
+        context.drawCenteredString(font, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
     }
 }

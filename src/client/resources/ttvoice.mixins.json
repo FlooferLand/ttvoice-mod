@@ -5,5 +5,9 @@
     "plugin": "com.flooferland.ttvoice.mixin.MixinPlugin",
     "injectors": {
         "defaultRequire": 1
-    }
+    },
+    "client": [
+        "RenderEventsAccessor",
+        "SVCSpeakingVisualMixin"
+    ]
 }

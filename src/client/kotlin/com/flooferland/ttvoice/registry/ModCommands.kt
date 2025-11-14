@@ -3,7 +3,6 @@ package com.flooferland.ttvoice.registry
 import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.speech.SpeechUtil
-import com.flooferland.ttvoice.util.ColorUtils
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
@@ -14,15 +13,12 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
-import net.minecraft.command.CommandSource
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Colors
-import net.minecraft.util.math.ColorHelper
+import net.minecraft.*
+import net.minecraft.commands.*
+import net.minecraft.network.chat.*
 import javax.sound.sampled.AudioSystem
 
+@Suppress("unused")
 object ModCommands {
     enum class Commands(path: String) {
         Speak("speak"),
@@ -74,18 +70,18 @@ object ModCommands {
         val mixer = getInteger(context, "mixer")
         val mixerInfo = AudioSystem.getMixerInfo()
         if (mixer < 0 || mixer > mixerInfo.size - 1) {
-            context.source.sendError(Text.of("Selected device doesn't exist"))
+            context.source.sendError(Component.literal("Selected device doesn't exist"))
             return 0
         }
         SatisfyingNoises.playSuccess()
         ModState.config.audio.device = mixer
         context.source.sendFeedback(
-            Text.literal("\nAudio mixer was successfully set to ")
+            Component.literal("\nAudio mixer was successfully set to ")
                 //? if <1.21 {
                 .append(
-                    Text.literal(mixerInfo[mixer].name)
+                    Component.literal(mixerInfo[mixer].name)
                         .setStyle(Style.EMPTY.withBold(true)
-                        .withHoverEvent(HoverEvent( HoverEvent.Action.SHOW_TEXT, Text.of("Device ID $mixer"))))
+                        .withHoverEvent(HoverEvent( HoverEvent.Action.SHOW_TEXT, Component.literal("Device ID $mixer"))))
                 )
                 //?}
         )
@@ -93,45 +89,45 @@ object ModCommands {
     }
 
     fun setMixerFromList(context: CommandContext<FabricClientCommandSource>): Int {
-        val mixerText = Text.empty()
+        val mixerText = Component.empty()
         val mixerInfo = AudioSystem.getMixerInfo()
         for ((i, mixer) in mixerInfo.withIndex()) {
             val isVoicemeeterOutMixer = mixer.description.lowercase().contains("port mixer")
-            mixerText.append(Text.of("- "));
+            mixerText.append(Component.literal("- "));
             mixerText.append(
-                Text.literal(mixer.name)
+                Component.literal(mixer.name)
                     .setStyle(
                         Style.EMPTY
                             .withBold(isVoicemeeterOutMixer)
                             //? if <1.21 {
-                            .withColor(if (isVoicemeeterOutMixer) ColorUtils.getColorArgb(255, 150, 255, 150) else Colors.WHITE)
-                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${mixer.description} (Device ID $i)")))
+                            .withColor(if (isVoicemeeterOutMixer) ChatFormatting.GREEN else ChatFormatting.WHITE)
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("${mixer.description} (Device ID $i)")))
                             .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.MixerSetExact.withParams(i)))
                             //?}
                     )
             )
-            mixerText.append(Text.of("\n"))
+            mixerText.append(Component.literal("\n"))
         }
         context.source.sendFeedback(mixerText)
         return 1
     }
 
     fun setVoiceFromList(context: CommandContext<FabricClientCommandSource>): Int {
-        val voiceText = Text.empty()
+        val voiceText = Component.empty()
         for ((i, voice) in SpeechUtil.getVoices().withIndex()) {
-            voiceText.append(Text.of("- "));
+            voiceText.append(Component.literal("- "));
             voiceText.append(
-                Text.literal(voice.name)
+                Component.literal(voice.name)
                     .setStyle(
                         Style.EMPTY
                             //? if <1.21 {
-                            .withColor(Colors.WHITE)
-                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("${voice.name} (id=${voice.identifier})")))
+                            .withColor(ChatFormatting.WHITE)
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("${voice.name} (id=${voice.identifier})")))
                             .withClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, Commands.VoiceSetExact.withParams(i)))
                             //?}
                     )
             )
-            voiceText.append(Text.of("\n"))
+            voiceText.append(Component.literal("\n"))
         }
         context.source.sendFeedback(voiceText)
         return 1
@@ -141,7 +137,7 @@ object ModCommands {
         ClientCommandRegistrationCallback.EVENT.register() { dispatcher, registryAccess ->
             val speakCommandLiteral = ClientCommandManager.literal(Commands.Speak.command)
                 .executes { context ->
-                    context.source.sendError(Text.of("Provide the text to speak with!"));
+                    context.source.sendError(Component.literal("Provide the text to speak with!"));
                     return@executes 0
                 }
                 .then(
@@ -163,7 +159,7 @@ object ModCommands {
                                         .executes(ModCommands::setMixer)
                                         .suggests({ context, builder ->
                                             val mixers = AudioSystem.getMixerInfo().mapIndexed { i, mixer -> "($i) ${mixer.name}" }
-                                            CommandSource.suggestMatching(mixers, builder)
+                                            SharedSuggestionProvider.suggest(mixers, builder)
                                         })
                                 )
                             )
@@ -180,7 +176,7 @@ object ModCommands {
                                         .executes(ModCommands::setVoice)
                                         .suggests({ context, builder ->
                                             val mixers = SpeechUtil.getVoices().mapIndexed { i, voice -> "($i) ${voice.name}" }
-                                            CommandSource.suggestMatching(mixers, builder)
+                                            SharedSuggestionProvider.suggest(mixers, builder)
                                         })
                                 )
                             )

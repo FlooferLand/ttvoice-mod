@@ -5,19 +5,17 @@ import com.flooferland.ttvoice.speech.ISpeaker
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises
 import com.flooferland.ttvoice.util.Utils.noAudioMixerError
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
 
 object ModEvents {
     fun registerEvents() {
         ClientPlayConnectionEvents.JOIN.register() { handler, sender, client ->
-            val player = client.player!!
-            SpeechUtil.load(ISpeaker.WorldContext(player, client.world!!))
+            val player = client.player ?: return@register
+            SpeechUtil.load(ISpeaker.WorldContext(player, client.level ?: return@register))
             if (ModState.config.audio.device == -1 && ModState.config.general.routeThroughDevice) {
-                player.sendMessage(Text.of(noAudioMixerError()), false)
+                player.displayClientMessage(Component.literal(noAudioMixerError()), false)
                 SatisfyingNoises.playDeny()
             }
         }

@@ -1,12 +1,12 @@
 package com.flooferland.ttvoice.speech
 
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.player.Player
 import org.jetbrains.annotations.CheckReturnValue
 
 interface ISpeaker {
     // Types
-    data class WorldContext(val player: PlayerEntity, val world: ClientWorld)
+    data class WorldContext(val player: Player, val level: ClientLevel)
     sealed interface Status {
         class Success : Status
         data class Failure(val type: StatusType, val context: String? = null) : Status

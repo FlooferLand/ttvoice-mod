@@ -4,8 +4,8 @@ import com.flooferland.ttvoice.VcPlugin;
 import com.flooferland.ttvoice.data.ModState;
 import com.flooferland.ttvoice.speech.SpeechUtil;
 import de.maxhenkel.voicechat.voice.client.RenderEvents;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -19,7 +19,7 @@ public class SVCSpeakingVisualMixin {
 		method = "onRenderHUD",
 		at = @At(value = "HEAD")
 	)
-	public void ttvoice$forceMicIcon(DrawContext guiGraphics, float tickDelta, CallbackInfo ci) {
+	public void ttvoice$forceMicIcon(GuiGraphics guiGraphics, float tickDelta, CallbackInfo ci) {
 		var api = VcPlugin.Companion.getApi();
 		if (api == null) return;
 		boolean hideIcons = api.getClientConfig().getBoolean("hideIcons", false);
@@ -40,8 +40,8 @@ interface RenderEventsAccessor {
 	boolean callShouldShowIcons();
 
 	@Invoker("renderIcon")
-	void callRenderIcon(DrawContext guiGraphics, Identifier texture);
+	void callRenderIcon(GuiGraphics guiGraphics, ResourceLocation texture);
 
 	@Accessor("MICROPHONE_ICON")
-	static Identifier getSpeakerIcon() { return null; }
+	static ResourceLocation getSpeakerIcon() { return null; }
 }

@@ -34,6 +34,6 @@ however inject into game at runtime.
 This mod may or may not be used by being injected into Minecraft,
 but is technically not a Minecraft plugin due to it not using any officially
 provided Minecraft plugin system.
-The mod uses Fabric for linking and injecting, Fabric itself is licensed
-under Apache & MIT (different components use different GPL-compatible licenses).
-For example, the mod uses the Yarn game mappings (Licensed under CC0)
+The mod uses license-compatible Fabric and Neoforge mod loaders for linking and injecting,
+Fabric for example is licensed under Apache & MIT
+(different components use different GPL-compatible licenses).

@@ -5,9 +5,9 @@ import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.screen.ConfigScreen
 import com.flooferland.ttvoice.screen.SelectDeviceScreen
-import net.minecraft.client.MinecraftClient
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.client.Minecraft
+import net.minecraft.network.chat.Component
 
 public object SpeechUtil {
     private var thread: SpeechThread? = null
@@ -34,8 +34,12 @@ public object SpeechUtil {
 
         thread?.send(SpeechThread.SpeakCommand(text, monophonic))
         thread?.onError { err ->
-            val player = MinecraftClient.getInstance().player
-            player?.sendMessage(Text.literal("Text-To-Voice Error ${err.type}:\n    ${err.context}").formatted(Formatting.RED), false)
+            val player = Minecraft.getInstance().player
+            player?.displayClientMessage(
+                Component.literal("Text-To-Voice Error ${err.type}:\n    ${err.context}")
+                    .withStyle(ChatFormatting.RED),
+                false
+            )
         }
     }
 
@@ -61,7 +65,7 @@ public object SpeechUtil {
     }
 
     fun isTestingArmed(): Boolean {
-        val screen = MinecraftClient.getInstance().currentScreen
+        val screen = Minecraft.getInstance().screen
         return screen is SelectDeviceScreen || screen is ConfigScreen
     }
 
@@ -78,7 +82,7 @@ public object SpeechUtil {
         }
     }
 
-    /** Gets the current voice */
+    /** Gets the current voice (native call) */
     fun getVoice(): Espeak.Voice? {
         return Espeak.getVoice()
     }

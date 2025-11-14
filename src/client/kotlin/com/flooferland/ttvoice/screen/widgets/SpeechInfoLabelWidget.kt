@@ -5,19 +5,19 @@ import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.screen.SelectDeviceScreen
 import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.SatisfyingNoises
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
-import net.minecraft.client.gui.tooltip.Tooltip
-import net.minecraft.client.gui.widget.PressableWidget
-/*? if >1.21.1*/ /*import net.minecraft.client.input.AbstractInput*/
-import net.minecraft.text.*
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.MathHelper
+import net.minecraft.ChatFormatting
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.components.AbstractButton
+import net.minecraft.client.gui.components.Tooltip
+import net.minecraft.client.gui.narration.NarrationElementOutput
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.util.Mth
 import javax.sound.sampled.AudioSystem
 
-class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRenderer) : PressableWidget(0, 0, 300, 15, Text.of("")) {
+class SpeechInfoLabelWidget(val screen: SpeechScreen, val font: Font) : AbstractButton(0, 0, 300, 15, Component.literal("")) {
     fun onPressed() {
         val error = screen.error
         if (error != null) {
@@ -28,51 +28,44 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
         if (ModState.config.general.routeThroughDevice) {
             val devices = AudioSystem.getMixerInfo()
             if (ModState.config.audio.device < devices.size) {
-                MinecraftClient.getInstance().setScreen(SelectDeviceScreen(screen))
+                Minecraft.getInstance().setScreen(SelectDeviceScreen(screen))
             }
         }
     }
 
-    fun render(context: DrawContext?) {
-        context!!.drawTextWithShadow(this.textRenderer, message, this.getX(), this.getY(), 16777215 or (MathHelper.ceil(this.alpha * 255.0f) shl 24))
+    fun render(context: GuiGraphics?) {
+        context!!.drawCenteredString(this.font, message, this.getX(), this.getY(), 16777215 or (Mth.ceil(this.alpha * 255.0f) shl 24))
     }
 
-    override fun appendClickableNarrations(builder: NarrationMessageBuilder?) {}
+    override fun updateWidgetNarration(builder: NarrationElementOutput) {}
 
     //? if >1.21.1 {
-    /*override fun onPress(input: AbstractInput?) = onPressed()
+    /*override fun onPress(input: net.minecraft.client.input.InputWithModifiers) = onPressed()
     *///?} else {
     override fun onPress() = onPressed()
     //?}
 
-
-    //? if <1.20.4 {
-    override fun renderButton(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float)
-        = render(context)
-    //?} else {
-    /*override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, deltaTicks: Float)
-        = render(context)
-    *///?}
+    override fun renderWidget(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) = render(context)
 
     fun update() {
         val devices = AudioSystem.getMixerInfo()
-        var text: MutableText = Text.empty()
+        var text = Component.empty()
 
         if (ModState.config.general.routeThroughDevice) {
-            text.append(Text.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}"))
-            setTooltip(Tooltip.of(Text.of("Click to change the device")))
+            text.append(Component.literal("Device: ${devices.getOrNull(ModState.config.audio.device)}"))
+            setTooltip(Tooltip.create(Component.literal("Click to change the device")))
         }
         if (ModState.config.general.routeThroughVoiceChat) {
             val connected = (if (VcPlugin.connected) "connected" else "disconnected")
             if (!text.string.isEmpty()) text.append("\n")
-            text.append(Text.translatable("status.ttvoice.vc.$connected", VcPlugin.modName))
+            text.append(Component.translatable("status.ttvoice.vc.$connected", VcPlugin.modName))
         }
 
         // Overrides
         if (screen.error?.message != null) {
-            text = Text.literal(screen.error!!.message!!)
-                .setStyle(Style.EMPTY.withFormatting(Formatting.DARK_RED))
-            setTooltip(Tooltip.of(Text.of("Error")))
+            text = Component.literal(screen.error!!.message!!)
+                .setStyle(Style.EMPTY.applyFormat(ChatFormatting.DARK_RED))
+            setTooltip(Tooltip.create(Component.literal("Error")))
         }
 
         message = text
@@ -80,7 +73,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val textRenderer: TextRend
 
     fun setBenchmarkResult(startMillis: Long, endMillis: Long) {
         val string = "Seconds passed: ${(endMillis - startMillis) / 1000f}"
-        message = Text.literal(string)
+        message = Component.literal(string)
         println(string)
     }
 }
