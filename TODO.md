@@ -1,4 +1,5 @@
 ### Main
+- [ ] Port to Neoforge _(high-priority)_
 - [ ] Add a Lua speaker to allow players to integrate other TTS libraries
 - [ ] Consider switching to [ktoml](https://github.com/orchestr7/ktoml), as toml4j is no longer maintained
 - [ ] Add user-made functions and expressions inside the speech screen
