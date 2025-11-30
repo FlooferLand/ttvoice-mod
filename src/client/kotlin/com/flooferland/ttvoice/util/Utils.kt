@@ -18,9 +18,9 @@ object Utils {
 
     fun openLink(parent: Screen, link: String) {
         //? if >1.20.1 {
-        /*ConfirmLinkScreen.confirmLink(parent, link)
+        /*ConfirmLinkScreen.confirmLinkNow(parent, link, true)
         *///?} else {
-        ConfirmLinkScreen.confirmLink(link, parent, true)
+        ConfirmLinkScreen.confirmLinkNow(link, parent, true)
         //?}
     }
 }

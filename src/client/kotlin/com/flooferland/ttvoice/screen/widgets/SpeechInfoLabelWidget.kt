@@ -34,7 +34,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val font: Font) : Abstract
     }
 
     fun render(context: GuiGraphics?) {
-        context!!.drawCenteredString(this.font, message, this.getX(), this.getY(), 16777215 or (Mth.ceil(this.alpha * 255.0f) shl 24))
+        context!!.drawString(this.font, message, this.getX(), this.getY(), 16777215 or (Mth.ceil(this.alpha * 255.0f) shl 24))
     }
 
     override fun updateWidgetNarration(builder: NarrationElementOutput) {}

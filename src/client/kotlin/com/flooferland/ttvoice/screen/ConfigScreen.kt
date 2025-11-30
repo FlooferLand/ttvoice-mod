@@ -129,7 +129,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
 
                 // Tiny buttons
                 val kofiButton = Button.builder(Component.literal("Ko-Fi"))
-                { Utils.openLink(this, "https://ko-fi.com/FlooferLand") }
+                    { Utils.openLink(this@ConfigScreen, "https://ko-fi.com/FlooferLand") }
                     .pos(pos.x, pos.y)
                     .size(size.x / 2, size.y)
                     .build()
@@ -138,7 +138,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                 kofiButton.visible = false
 
                 val patreonButton = Button.builder(Component.literal("Patreon"))
-                { Utils.openLink(this, "https://patreon.com/FlooferLand") }
+                    { Utils.openLink(this@ConfigScreen, "https://patreon.com/FlooferLand") }
                     .pos(pos.x + (size.x / 2), pos.y)
                     .size(size.x / 2, size.y)
                     .build()
@@ -156,7 +156,7 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
                     .pos(pos.x, pos.y)
                     .size(size.x, size.y)
                     .build()
-                donateButton.setAlpha(0.5f)
+                donateButton.setAlpha(0.7f)
                 addRenderableWidget(donateButton)
                 donationWidgets.add(donateButton)
             }
@@ -443,6 +443,6 @@ class ConfigScreen(val parent: Screen) : Screen(title) {
         super.render(context, mouseX, mouseY, delta)
         //?}
 
-        context.drawCenteredString(font, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
+        context.drawString(font, com.flooferland.ttvoice.screen.title, 10, 10, WHITE_COLOR)
     }
 }
