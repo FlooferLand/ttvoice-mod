@@ -331,7 +331,7 @@ class SpeechScreen() : Screen(Component.literal("Speech screen")) {
                 }
             }
 
-            //? if >1.21.1 {
+            //? if >1.21.7 {
             /*override fun renderContent(context: GuiGraphics, mouseX: Int, mouseY: Int, hovered: Boolean, deltaTicks: Float) {}
             *///?} else {
             override fun render(context: GuiGraphics, index: Int, y: Int, x: Int, entryWidth: Int, entryHeight: Int, mouseX: Int, mouseY: Int, hovered: Boolean, delta: Float) {}

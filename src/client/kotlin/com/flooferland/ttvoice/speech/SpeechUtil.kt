@@ -1,7 +1,7 @@
 package com.flooferland.ttvoice.speech
 
 import com.flooferland.espeak.Espeak
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.screen.ConfigScreen
 import com.flooferland.ttvoice.screen.SelectDeviceScreen

@@ -1,7 +1,7 @@
 package com.flooferland.ttvoice.figura
 
 //? if has_figura {
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import org.figuramc.figura.avatar.Avatar
 import org.figuramc.figura.entries.FiguraAPI
 import org.figuramc.figura.entries.annotations.FiguraAPIPlugin

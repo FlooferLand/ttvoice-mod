@@ -1,8 +1,8 @@
 package com.flooferland.ttvoice.screen
 
 import com.flooferland.espeak.Espeak
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.data.TextToVoiceConfig.*

@@ -39,7 +39,7 @@ class SpeechInfoLabelWidget(val screen: SpeechScreen, val font: Font) : Abstract
 
     override fun updateWidgetNarration(builder: NarrationElementOutput) {}
 
-    //? if >1.21.1 {
+    //? if >1.21.7 {
     /*override fun onPress(input: net.minecraft.client.input.InputWithModifiers) = onPressed()
     *///?} else {
     override fun onPress() = onPressed()

@@ -1,6 +1,6 @@
 package com.flooferland.ttvoice.registry
 
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import com.flooferland.ttvoice.screen.SpeechScreen
 import com.flooferland.ttvoice.util.rl
 import com.mojang.blaze3d.platform.InputConstants
@@ -18,7 +18,7 @@ enum class ModKeybinds(translationKey: String, code: InputConstants.Type, key: I
     );
 
     val bind = KeyBindingHelper.registerKeyBinding(
-        //? if >1.21.1 {
+        //? if >1.21.7 {
         /*KeyMapping(translationKey, code, key, KeyMapping.Category.register(rl("general")))
         *///?} else {
         KeyMapping(translationKey, code, key, "category.${MOD_ID}.general")

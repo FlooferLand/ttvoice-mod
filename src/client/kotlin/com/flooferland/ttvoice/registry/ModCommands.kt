@@ -1,6 +1,6 @@
 package com.flooferland.ttvoice.registry
 
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.speech.SpeechUtil
 import com.flooferland.ttvoice.util.SatisfyingNoises

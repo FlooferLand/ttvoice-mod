@@ -1,15 +1,22 @@
 val java = if (stonecutter.eval(stonecutter.current.version, ">=1.20.5"))
     JavaVersion.VERSION_21 else JavaVersion.VERSION_17
 val kotlinVersion = "2.2.20"
-val loader = "fabric"
-var hasFigura = stonecutter.eval(stonecutter.current.version, "<=${property("latest_figura_mc_version")}")
+val loader = stonecutter.current.project.split("-").last()
+val isFabric = loader == "fabric"
+val isNeoforge = loader == "neoforge"
+val hasFigura = isFabric && stonecutter.eval(stonecutter.current.version, "<=${property("latest_figura_mc_version")}")
 
 plugins {
     kotlin("jvm") version "2.2.20"
     id("com.google.devtools.ksp") version "2.2.20-2.0.2"
     id("dev.kikugie.stonecutter")
-    id("fabric-loom") version "1.11-SNAPSHOT"
+    id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22"
+    id("dev.kikugie.fletching-table.neoforge") version "0.1.0-alpha.22"
+    id("fabric-loom") version "1.13-SNAPSHOT"
     id("me.modmuss50.mod-publish-plugin") version "1.0.0"
+    /*if (isNeoforge) {
+        id("net.neoforged.moddev") version "2.0.120"
+    }*/
 }
 
 val minecraft = stonecutter.current.version
@@ -22,8 +29,21 @@ base {
 val isAlpha = "alpha" in modVersion
 val isBeta = "beta" in modVersion
 
+fun versionedDep(name: String): String {
+    val name = "deps.$minecraft.$name"
+    return findProperty(name) as? String ?: error("Unable to find versioned property '$name' for Minecraft $minecraft")
+}
+
 stonecutter {
+    constants["fabric"] = isFabric
+    constants["neoforge"] = isNeoforge
     constants["has_figura"] = hasFigura
+}
+
+fletchingTable {
+    mixins.create("client") {
+        mixin("default", "ttvoice.mixins.json")
+    }
 }
 
 evaluationDependsOnChildren()
@@ -101,27 +121,29 @@ dependencies {
     @Suppress("UnstableApiUsage")
     mappings(loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-$minecraft:${dep("parchment")}@zip")
+        parchment("org.parchmentmc.data:parchment-$minecraft:${versionedDep("parchment")}@zip")
     })
     minecraft("com.mojang:minecraft:${minecraft}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-    if (loader == "fabric") {
+    if (isFabric) {
         if (dep("fabric_language_kotlin").split("+")[1] != "kotlin.$kotlinVersion") {
             error("Fabric Language Kotlin and Kotlin version do not match up")
         }
         modImplementation("net.fabricmc:fabric-loader:${dep("fabric_loader")}")
-        modImplementation("net.fabricmc.fabric-api:fabric-api:${dep("fabric_api")}")
+        modImplementation("net.fabricmc.fabric-api:fabric-api:${versionedDep("fabric_api")}")
         modImplementation("net.fabricmc:fabric-language-kotlin:${dep("fabric_language_kotlin")}")
+    } else if (isNeoforge) {
+        modImplementation("net.neoforged:neoforge:${dep("neoforge")}")
     }
 
     // Config
     implementation("com.moandjiezana.toml:toml4j:${dep("toml4j")}")
     include("com.moandjiezana.toml:toml4j:${dep("toml4j")}")
-    modApi("com.terraformersmc:modmenu:${dep("mod_menu")}")
+    modApi("com.terraformersmc:modmenu:${versionedDep("mod_menu")}")
 
     // Simple voice chat
-    modImplementation("de.maxhenkel.voicechat:voicechat-api:${dep("simple_voice_chat_api")}")
-    modImplementation("maven.modrinth:simple-voice-chat:$loader-${minecraft}-${dep("simple_voice_chat")}")
+    modImplementation("de.maxhenkel.voicechat:voicechat-api:${versionedDep("simple_voice_chat_api")}")
+    modImplementation("maven.modrinth:simple-voice-chat:$loader-${minecraft}-${versionedDep("simple_voice_chat")}")
             
     // Figura integration
     if (hasFigura) {
@@ -145,18 +167,19 @@ dependencies {
 
 tasks.withType<ProcessResources>().configureEach {
     duplicatesStrategy = DuplicatesStrategy.WARN
+    filteringCharset = "UTF-8"
 
     val fabricLanguageKotlin = "${dep("fabric_language_kotlin")}+kotlin.$kotlinVersion"
-    val voiceChatMod = "${minecraft}-${dep("simple_voice_chat")}"
+    val voiceChatMod = "${minecraft}-${versionedDep("simple_voice_chat")}"
     val properties = mapOf(
-        "minecraft" to dep("minecraft"),
+        "minecraft" to versionedDep("minecraft_range"),
         "version" to version as String,
         "java" to java.toString(),
         "kotlin" to kotlinVersion,
         "fabric_loader" to dep("fabric_loader"),
         "fabric_language_kotlin" to fabricLanguageKotlin,
         "voicechat_mod" to voiceChatMod,
-        "mod_menu" to dep("mod_menu"),
+        "mod_menu" to versionedDep("mod_menu"),
         "figura" to dep("figura"),
         "archivesName" to base.archivesName.get(),
         "archivesBaseName" to base.archivesName.get()
@@ -209,13 +232,12 @@ tasks.test {
 
 publishMods {
     // Utils
-    fun versionList(prop: String) = findProperty(prop)?.toString()
-        ?.split(',')
-        ?.map { it.trim() }
-        ?: emptyList()
+    fun versionList(prop: String) = versionedDep(prop)
+        .split(',')
+        .map { it.trim() }
 
     // Release
-    val stableMcVersions = versionList("vers.minecraft")
+    val stableMcVersions = versionList("minecraft_lists")
     displayName.set("$modVersion for ${stableMcVersions.joinToString(", ") }")
     file.set(tasks.remapJar.get().archiveFile)
     changelog.set(

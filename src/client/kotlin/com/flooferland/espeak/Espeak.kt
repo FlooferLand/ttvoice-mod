@@ -2,7 +2,7 @@
 
 package com.flooferland.espeak
 
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import kotlin.io.path.pathString

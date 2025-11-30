@@ -1,8 +1,8 @@
 package com.flooferland.ttvoice.figura
 
 //? if has_figura {
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import com.flooferland.ttvoice.accessors.FiguraEventsAPIAccess
 import com.mojang.datafixers.util.Pair
 import org.figuramc.figura.FiguraMod

@@ -13,7 +13,7 @@
 	"icon": "assets/ttvoice/textures/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": ["com.flooferland.ttvoice.TextToVoiceClient"],
+		"client": ["com.flooferland.ttvoice.loader.fabric.FabricClientEntrypoint"],
 		"voicechat": ["com.flooferland.ttvoice.VcPlugin"],
 		"modmenu": ["com.flooferland.ttvoice.ModMenuEntry"],
 		"figura_event": ["com.flooferland.ttvoice.figura.FiguraEventPlugin"],

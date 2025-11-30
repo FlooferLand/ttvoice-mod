@@ -1,6 +1,6 @@
 package com.flooferland.ttvoice.speech
 
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
 import com.flooferland.ttvoice.data.ModState
 import com.flooferland.ttvoice.data.TextToVoiceConfig
 import com.flooferland.ttvoice.speech.ISpeaker.Status

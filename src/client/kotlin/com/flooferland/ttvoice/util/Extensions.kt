@@ -19,7 +19,7 @@ object Extensions {
     }
 
     public fun MutableComponent.compatHoverTooltip(tooltip: Component): MutableComponent = this
-        //? if <1.21.9 {
+        //? if <1.21.7 {
         .withStyle { s -> s.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)) }
         //?} else {
         /*.withStyle { s -> s.withHoverEvent(HoverEvent.ShowText(tooltip)) }

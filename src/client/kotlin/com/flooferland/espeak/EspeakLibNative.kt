@@ -3,8 +3,8 @@
 package com.flooferland.espeak
 
 import com.flooferland.ttvoice.TextToVoiceClient
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.LOGGER
-import com.flooferland.ttvoice.TextToVoiceClient.Companion.MOD_ID
+import com.flooferland.ttvoice.TextToVoiceClient.LOGGER
+import com.flooferland.ttvoice.TextToVoiceClient.MOD_ID
 import com.sun.jna.*
 import net.minecraft.client.Minecraft
 import java.nio.charset.StandardCharsets
